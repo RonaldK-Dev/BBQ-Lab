@@ -144,10 +144,10 @@
       .sidebar-menu-wrap{position:relative;flex-shrink:0}
       .sidebar-menu-btn{background:var(--smoke);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:18px;color:var(--muted);cursor:pointer;line-height:1;width:auto}
       .sidebar-menu-btn:hover{color:var(--text);background:var(--bg)}
-      .sidebar-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:170px;z-index:100;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
-      .sidebar-dropdown-item{padding:12px 16px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+      .sidebar-dropdown{position:absolute;top:100%;left:0;padding-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:170px;z-index:100;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+      .sidebar-dropdown-item{padding:12px 16px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s,color 0.15s}
       .sidebar-dropdown-item:last-child{border-bottom:none}
-      .sidebar-dropdown-item:hover{background:var(--smoke)}
+      .sidebar-dropdown-item:hover{background:var(--smoke);color:var(--accent)}
       .sidebar-collapse-btn{background:var(--smoke);border:1px solid var(--border);border-radius:8px;padding:6px 9px;font-size:13px;color:var(--muted);cursor:pointer;flex-shrink:0;line-height:1;width:auto}
       .sidebar-collapse-btn:hover{color:var(--text);background:var(--bg)}
       .sidebar.collapsed{width:52px;padding:14px 8px;align-items:center;overflow:hidden}
@@ -293,6 +293,7 @@ function renderList(){
     const imItem=div("sidebar-dropdown-item");imItem.textContent="📥 Importieren";imItem.addEventListener("click",()=>set({importOpen:true,sidebarMenuOpen:false}));
     dd.appendChild(exItem);dd.appendChild(imItem);mWrap.appendChild(dd);
   }
+  mWrap.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
   sbLogoRow.appendChild(sLogo);sbLogoRow.appendChild(mWrap);
   const colBtn=document.createElement("button");colBtn.className="sidebar-collapse-btn";
   colBtn.textContent=isOpen?"◄":"►";
