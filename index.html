@@ -297,9 +297,10 @@ function renderList(){
     const dd=div("sidebar-dropdown");
     const exItem=div("sidebar-dropdown-item");exItem.textContent="📤 Exportieren";exItem.addEventListener("click",doExport);
     const imItem=div("sidebar-dropdown-item");imItem.textContent="📥 Importieren";imItem.addEventListener("click",()=>set({importOpen:true,sidebarMenuOpen:false}));
-    dd.appendChild(exItem);dd.appendChild(imItem);sb.appendChild(dd);
+    dd.appendChild(exItem);dd.appendChild(imItem);
+    dd.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
+    sb.appendChild(dd);
   }
-  sb.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
   if(isOpen){
     const sSub=div("sidebar-sub");sSub.textContent="Gewürz Tasting Log";sb.appendChild(sSub);
     const stats=div("sidebar-stats");
