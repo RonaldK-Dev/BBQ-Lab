@@ -1,0 +1,19 @@
+{
+  "name": "BBQ Lab",
+  "short_name": "BBQ Lab",
+  "description": "Gewürz Tasting Log für BBQ-Enthusiasten",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0e0c",
+  "theme_color": "#0f0e0c",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
