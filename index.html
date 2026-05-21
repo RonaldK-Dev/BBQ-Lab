@@ -107,6 +107,14 @@
     .sheet-cancel{padding:14px 16px;border-radius:10px;background:var(--smoke);border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;width:auto}
     .sidebar{display:none}
     .desktop-list-header{display:none}
+    .search-wrap{position:relative;display:flex;align-items:center;flex:1}
+    .search-input{background:var(--smoke);border:1px solid var(--border);border-radius:10px;padding:9px 34px 9px 36px;color:var(--text);font-size:14px;width:100%;outline:none;font-family:'DM Sans',sans-serif}
+    .search-input:focus{border-color:var(--accent)}
+    .search-input::placeholder{color:var(--muted)}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+    .search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--border);color:var(--text);font-size:14px;line-height:20px;text-align:center;cursor:pointer;transition:background 0.15s,color 0.15s;user-select:none}
+    .search-clear:hover{background:var(--accent);color:#fff}
+    .mobile-search-wrap{padding:10px 20px 4px}
     @media(min-width:768px){
       body{overflow:hidden}
       #root{max-width:100%;margin:0}
@@ -123,7 +131,8 @@
       .sidebar-ghost-btn:hover{background:var(--smoke);color:var(--text)}
       .sidebar-spacer{flex:1}
       .sidebar-footer{font-size:10px;color:var(--border);text-align:center;padding-top:14px;border-top:1px solid var(--border);letter-spacing:1px;text-transform:uppercase}
-      .main-content{flex:1;overflow-y:auto;height:100vh;display:flex;flex-direction:column}
+      .main-content{flex:1;overflow-y:auto;height:100vh;display:flex;flex-direction:column;scrollbar-gutter:stable}
+      .mobile-search-wrap{display:none}
       .desktop-list-header{display:flex;padding:20px 28px 14px;border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;flex-shrink:0}
       .desktop-list-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--muted)}
       .header{display:none}
@@ -158,11 +167,10 @@
       .stat-row.clickable:hover{background:rgba(232,160,32,0.08)}
       .stat-row.active{background:rgba(232,160,32,0.15);color:var(--accent)}
       .stat-row.active .stat-val{color:var(--accent)}
-      .search-wrap{position:relative;display:flex;align-items:center}
-      .search-input{background:var(--smoke);border:1px solid var(--border);border-radius:10px;padding:7px 12px 7px 34px;color:var(--text);font-size:13px;width:280px;outline:none;font-family:'DM Sans',sans-serif}
-      .search-input:focus{border-color:var(--accent)}
-      .search-input::placeholder{color:var(--muted)}
-      .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+      .search-wrap{flex:0 0 auto}
+      .search-input{font-size:13px;width:280px;padding:7px 32px 7px 34px}
+      .search-icon{left:11px;font-size:14px}
+      .search-clear{right:8px;width:20px;height:20px;line-height:18px}
       @keyframes fadeIn{from{opacity:0}to{opacity:1}}
       @keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
       @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -272,7 +280,7 @@ function renderList(){
     const wip=S.entries.filter(e=>e.status==="in Arbeit").length;
     const verworfen=S.entries.filter(e=>e.status==="verworfen").length;
     [
-      ["🔥 Tests",S.entries.length,null],
+      ["🔥 Rezepte",S.entries.length,null],
       ["⭐ Schnitt",avgRating,null],
       ["✅ Fertig",done,"fertig"],
       ["🔬 In Arbeit",wip,"in Arbeit"],
@@ -287,7 +295,7 @@ function renderList(){
       stats.appendChild(row);
     });
     sb.appendChild(stats);
-    sb.appendChild(btn("sidebar-new-btn","+ NEUER TEST",openNew));
+    sb.appendChild(btn("sidebar-new-btn","+ NEUES REZEPT",openNew));
     sb.appendChild(div("sidebar-spacer"));
     const foot=div("sidebar-footer");foot.textContent="BBQ Lab";sb.appendChild(foot);
   }
@@ -295,16 +303,24 @@ function renderList(){
 
   // Main content area
   const main=div("main-content");
+  const buildSearch=()=>{
+    const sw=div("search-wrap");
+    const si=div("search-icon");si.textContent="🔍";
+    const inp=document.createElement("input");inp.className="search-input";inp.placeholder="Suchen in Namen, Zutaten, Notizen...";inp.value=S.search;
+    inp.addEventListener("input",e=>{S.search=e.target.value;render();});
+    sw.appendChild(si);sw.appendChild(inp);
+    if(S.search){
+      const sc=div("search-clear");sc.textContent="×";sc.title="Suche zurücksetzen";
+      sc.addEventListener("click",()=>set({search:""}));
+      sw.appendChild(sc);
+    }
+    return sw;
+  };
   const dlh=div("desktop-list-header");
-  const dlt=div("desktop-list-title");dlt.textContent=S.filter?S.filter.toUpperCase():"Alle Tests";
-  const swrap=div("search-wrap");
-  const sicon=div("search-icon");sicon.textContent="🔍";
-  const sinput=document.createElement("input");sinput.className="search-input";sinput.placeholder="Suchen in Namen, Zutaten, Notizen...";sinput.value=S.search;
-  sinput.addEventListener("input",e=>{S.search=e.target.value;render();});
-  swrap.appendChild(sicon);swrap.appendChild(sinput);
+  const dlt=div("desktop-list-title");dlt.textContent=S.filter?S.filter.toUpperCase():"Alle Rezepte";
   const filtered=S.entries.filter(e=>(!S.filter||e.status===S.filter)&&matchesSearch(e,S.search));
-  const dbadge=div("badge");dbadge.textContent=filtered.length+(filtered.length===S.entries.length?" Tests":" / "+S.entries.length);
-  dlh.appendChild(dlt);dlh.appendChild(swrap);dlh.appendChild(dbadge);main.appendChild(dlh);
+  const dbadge=div("badge");dbadge.textContent=filtered.length+(filtered.length===S.entries.length?" Rezepte":" / "+S.entries.length);
+  dlh.appendChild(dlt);dlh.appendChild(buildSearch());dlh.appendChild(dbadge);main.appendChild(dlh);
 
   // Header
   const hdr=div("header");
@@ -317,7 +333,7 @@ function renderList(){
 
   const right=div("header-right");
   const badge=div("badge");
-  badge.textContent=S.entries.length+" Tests";
+  badge.textContent=S.entries.length+" Rezepte";
 
   const mwrap=div("menu-wrap");
   const mbtn=btn("menu-btn","\u22ef",()=>set({menuOpen:!S.menuOpen}));
@@ -331,6 +347,9 @@ function renderList(){
   right.appendChild(badge);right.appendChild(mwrap);
   top.appendChild(logo);top.appendChild(right);
   hdr.appendChild(top);main.appendChild(hdr);
+
+  // Mobile search bar (hidden on desktop via CSS)
+  const msw=div("mobile-search-wrap");msw.appendChild(buildSearch());main.appendChild(msw);
 
   // Import overlay
   if(S.importOpen){
@@ -355,8 +374,8 @@ function renderList(){
   if(S.entries.length===0){
     const em=div("empty");
     const icon=div("empty-icon");icon.textContent="\ud83e\uddc2";
-    const h3=document.createElement("h3");h3.textContent="Noch keine Tests";
-    const p=document.createElement("p");p.style.fontSize="14px";p.textContent="Tippe auf + um deinen ersten Test zu starten";
+    const h3=document.createElement("h3");h3.textContent="Noch keine Rezepte";
+    const p=document.createElement("p");p.style.fontSize="14px";p.textContent="Tippe auf + um dein erstes Rezept zu starten";
     em.appendChild(icon);em.appendChild(h3);em.appendChild(p);
     list.appendChild(em);
   } else if(filtered.length===0){
@@ -399,7 +418,7 @@ function renderForm(){
   const fh=div("form-header");
   fh.appendChild(btn("back-btn","\u2190",()=>set({view:"list"})));
   const ft=div("form-title");
-  ft.textContent=S.entries.find(e=>e.id===c.id)?"Test bearbeiten":"Neuer Test";
+  ft.textContent=S.entries.find(e=>e.id===c.id)?"Rezept bearbeiten":"Neues Rezept";
   fh.appendChild(ft);wrap.appendChild(fh);
 
   // Name + Version
@@ -622,8 +641,14 @@ function render(){
     }else{r.appendChild(renderDetail());}
   }
   if(searchFocused){
-    const ns=document.querySelector(".search-input");
-    if(ns){ns.focus();if(searchPos!==null)ns.setSelectionRange(searchPos,searchPos);}
+    const inputs=document.querySelectorAll(".search-input");
+    for(const inp of inputs){
+      if(inp.offsetParent!==null){
+        inp.focus();
+        if(searchPos!==null)inp.setSelectionRange(searchPos,searchPos);
+        break;
+      }
+    }
   }
 }
 // Pull-to-refresh
