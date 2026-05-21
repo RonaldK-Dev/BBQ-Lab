@@ -144,7 +144,7 @@
       .sidebar-menu-wrap{position:relative;flex-shrink:0}
       .sidebar-menu-btn{background:var(--smoke);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:18px;color:var(--muted);cursor:pointer;line-height:1;width:auto}
       .sidebar-menu-btn:hover{color:var(--text);background:var(--bg)}
-      .sidebar-dropdown{position:absolute;top:100%;left:0;padding-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;min-width:170px;z-index:100;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+      .sidebar-dropdown{background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:4px 0 8px}
       .sidebar-dropdown-item{padding:12px 16px;font-size:13px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s,color 0.15s}
       .sidebar-dropdown-item:last-child{border-bottom:none}
       .sidebar-dropdown-item:hover{background:var(--smoke);color:var(--accent)}
@@ -287,19 +287,19 @@ function renderList(){
   const mBtn=document.createElement("button");mBtn.className="sidebar-menu-btn";mBtn.textContent="≡";
   mBtn.addEventListener("click",()=>set({sidebarMenuOpen:!S.sidebarMenuOpen}));
   mWrap.appendChild(mBtn);
-  if(S.sidebarMenuOpen){
-    const dd=div("sidebar-dropdown");
-    const exItem=div("sidebar-dropdown-item");exItem.textContent="📤 Exportieren";exItem.addEventListener("click",doExport);
-    const imItem=div("sidebar-dropdown-item");imItem.textContent="📥 Importieren";imItem.addEventListener("click",()=>set({importOpen:true,sidebarMenuOpen:false}));
-    dd.appendChild(exItem);dd.appendChild(imItem);mWrap.appendChild(dd);
-  }
-  mWrap.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
   sbLogoRow.appendChild(sLogo);sbLogoRow.appendChild(mWrap);
   const colBtn=document.createElement("button");colBtn.className="sidebar-collapse-btn";
   colBtn.textContent=isOpen?"◄":"►";
   colBtn.addEventListener("click",()=>set({sidebarOpen:!isOpen,sidebarMenuOpen:false}));
   sbTop.appendChild(sbLogoRow);sbTop.appendChild(colBtn);
   sb.appendChild(sbTop);
+  if(S.sidebarMenuOpen){
+    const dd=div("sidebar-dropdown");
+    const exItem=div("sidebar-dropdown-item");exItem.textContent="📤 Exportieren";exItem.addEventListener("click",doExport);
+    const imItem=div("sidebar-dropdown-item");imItem.textContent="📥 Importieren";imItem.addEventListener("click",()=>set({importOpen:true,sidebarMenuOpen:false}));
+    dd.appendChild(exItem);dd.appendChild(imItem);sb.appendChild(dd);
+  }
+  sb.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
   if(isOpen){
     const sSub=div("sidebar-sub");sSub.textContent="Gewürz Tasting Log";sb.appendChild(sSub);
     const stats=div("sidebar-stats");
