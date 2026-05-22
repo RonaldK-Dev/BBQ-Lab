@@ -338,7 +338,7 @@ function renderList(){
   badge.textContent=S.entries.length+" Rezepte";
 
   const mwrap=div("menu-wrap");
-  const mbtn=btn("menu-btn","\u22ef",()=>set({menuOpen:!S.menuOpen}));
+  const mbtn=btn("menu-btn","\u22ef",(e)=>{e.stopPropagation();set({menuOpen:!S.menuOpen});});
   mwrap.appendChild(mbtn);
   if(S.menuOpen){
     const dd=div("dropdown");
