@@ -719,12 +719,7 @@ function initPTR(){
     ptStart=0;
     if(dist>60){
       ptEl.style.height="44px";
-      const cloud=await loadFromSupabase();
-      if(cloud&&cloud.length>0){
-        S.entries=cloud;
-        render();
-      }
-      setTimeout(()=>{ptEl.style.height="0";},400);
+      setTimeout(()=>location.reload(),400);
     } else {
       ptEl.style.height="0";
     }
