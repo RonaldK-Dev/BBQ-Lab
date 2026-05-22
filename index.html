@@ -120,6 +120,13 @@
     .photo-pick{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;margin-bottom:16px;line-height:1.8}
     .photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:6px;cursor:pointer;display:block}
     .photo-rm{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0 0 12px;display:block}
+    .card-check{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--smoke);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;z-index:5;transition:background 0.15s,border-color 0.15s;flex-shrink:0}
+    .card-check.checked{background:var(--accent);border-color:var(--accent)}
+    .entry-card.selected{border-color:var(--accent);background:rgba(232,160,32,0.06)}
+    .selection-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;z-index:60;box-shadow:0 -4px 20px rgba(0,0,0,0.3)}
+    .sel-cancel{padding:12px 16px;border-radius:10px;background:var(--smoke);border:1px solid var(--border);color:var(--muted);font-size:14px;cursor:pointer;flex-shrink:0;width:auto}
+    .sel-export{flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;width:auto}
+    .sel-export:disabled{opacity:0.4;cursor:default}
     @media(min-width:768px){
       body{overflow:hidden}
       #root{max-width:100%;margin:0}
@@ -257,7 +264,8 @@ function inp(cls,val,cb,extra){
 function txt(cls,text){const e=document.createElement("p");e.className=cls;e.textContent=text;return e;}
 function span(text){return document.createTextNode(text);}
 
-let S={view:"list",entries:load(),current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null};
+let S={view:"list",entries:load(),current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[]};
+let _lpTimer=null;
 function set(p){S=Object.assign({},S,p);render();}
 
 function renderList(){
@@ -402,10 +410,21 @@ function renderList(){
     list.appendChild(em);
   }
   filtered.forEach(e=>{
-    const card=div("entry-card");
+    const card=div("entry-card"+(S.selectionMode&&S.selectedIds.includes(e.id)?" selected":""));
     card.style.setProperty("--st-color",SC[e.status]);
-    card.addEventListener("click",()=>set({view:"detail",detailId:e.id}));
+    card.addEventListener("click",()=>{
+      if(S.selectionMode){
+        const ids=S.selectedIds.includes(e.id)?S.selectedIds.filter(x=>x!==e.id):[...S.selectedIds,e.id];
+        set({selectedIds:ids});
+      }else{set({view:"detail",detailId:e.id});}
+    });
+    card.addEventListener("touchstart",()=>{
+      _lpTimer=setTimeout(()=>{_lpTimer=null;set({selectionMode:true,selectedIds:[e.id]});},500);
+    },{passive:true});
+    card.addEventListener("touchmove",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
+    card.addEventListener("touchend",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
     if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;card.appendChild(ci);}
+    if(S.selectionMode){const ck=div("card-check"+(S.selectedIds.includes(e.id)?" checked":""));ck.textContent=S.selectedIds.includes(e.id)?"✓":"";card.appendChild(ck);}
     const ctop=div("card-top");
     const nd=div("");
     const cn=div("card-name");cn.textContent=e.name+(e.version?" V."+e.version:"");
@@ -423,6 +442,20 @@ function renderList(){
     list.appendChild(card);
   });
   main.appendChild(list);
+  if(S.selectionMode){
+    const bar=div("selection-bar");
+    const cancelB=btn("sel-cancel","Abbrechen",()=>set({selectionMode:false,selectedIds:[]}));
+    const n=S.selectedIds.length;
+    const exportB=btn("sel-export",n===0?"Auswählen...":n+" Rezept"+(n===1?"":"e")+" exportieren",async()=>{
+      if(n===0)return;
+      const sel=S.entries.filter(x=>S.selectedIds.includes(x.id));
+      await doExport(sel);
+      set({selectionMode:false,selectedIds:[]});
+    });
+    if(n===0)exportB.disabled=true;
+    bar.appendChild(cancelB);bar.appendChild(exportB);
+    wrap.appendChild(bar);
+  }
   wrap.appendChild(main);
   wrap.appendChild(btn("fab","+",openNew));
   return wrap;
@@ -640,9 +673,10 @@ async function doSave(){
 function doDownload(blob,filename){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
 }
-async function doExport(){
+async function doExport(entriesToExport){
+  const data=entriesToExport||S.entries;
   const filename="bbq-lab-export-"+new Date().toISOString().split("T")[0]+".json";
-  const blob=new Blob([JSON.stringify(S.entries,null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const file=new File([blob],filename,{type:"application/json"});
   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
     try{await navigator.share({files:[file],title:"BBQ Lab Export"});}
