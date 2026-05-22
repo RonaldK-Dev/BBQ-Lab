@@ -218,7 +218,7 @@ const SUPABASE_KEY="sb_publishable_Wz9U4K2Sb6ooyKWLvIb1oQ_0KT2qKYy";
 const UNITS=["TL","EL","Cup","g","ml","Prise","\u2013"];
 const FRACS=["\u00bc","\u00bd","\u00be","1","1\u00bd","2","3","4"];
 const TYPES=["Rub","Sauce","Marinade","Dip"];
-const MEATS=["H\u00e4hnchen","Rind","Schwein","Fisch","Gem\u00fcse","Lamm"];
+const MEATS=["Rind","Schwein","H\u00e4hnchen","Lamm","Fisch","Gem\u00fcse"];
 const SC={"in Arbeit":"#f59e0b","fertig":"#10b981","verworfen":"#ef4444"};
 const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
@@ -319,21 +319,23 @@ function renderList(){
     const done=S.entries.filter(e=>e.status==="fertig").length;
     const wip=S.entries.filter(e=>e.status==="in Arbeit").length;
     const verworfen=S.entries.filter(e=>e.status==="verworfen").length;
+    const allActive=!S.filter&&!S.typeFilter&&!S.meatFilter.length&&!S.ratingFilter;
     [
-      ["🔥 Rezepte",S.entries.length,null],
+      ["🔥 Rezepte",S.entries.length,"__all__"],
       ["★ Schnitt",avgRating,null],
       ["✅ Fertig",done,"fertig"],
       ["🔬 In Arbeit",wip,"in Arbeit"],
       ["🚫 Verworfen",verworfen,"verworfen"]
     ].forEach(([label,val,filterKey])=>{
-      const isActive=filterKey&&S.filter===filterKey;
+      const isActive=filterKey==="__all__"?allActive:(filterKey&&S.filter===filterKey);
       const row=div("stat-row"+(filterKey?" clickable":"")+(isActive?" active":""));
       const l=document.createElement("span");
       if(label.startsWith("★")){const star=document.createElement("span");star.textContent="★";star.style.cssText="color:var(--accent);font-size:1.3em;line-height:1;vertical-align:middle";l.appendChild(star);l.appendChild(document.createTextNode(" "+label.slice(1)));}
       else{l.textContent=label;}
       const v=div("stat-val");v.textContent=val;
       row.appendChild(l);row.appendChild(v);
-      if(filterKey)row.addEventListener("click",()=>set({filter:S.filter===filterKey?null:filterKey}));
+      if(filterKey==="__all__")row.addEventListener("click",()=>set({filter:null,typeFilter:null,meatFilter:[],ratingFilter:null,search:""}));
+      else if(filterKey)row.addEventListener("click",()=>set({filter:S.filter===filterKey?null:filterKey}));
       stats.appendChild(row);
     });
     sb.appendChild(stats);
@@ -368,8 +370,8 @@ function renderList(){
     });
     tagSec.appendChild(meatG);
     sb.appendChild(tagSec);
-    sb.appendChild(btn("sidebar-new-btn","+ NEUES REZEPT",openNew));
     sb.appendChild(div("sidebar-spacer"));
+    sb.appendChild(btn("sidebar-new-btn","+ NEUES REZEPT",openNew));
     const foot=div("sidebar-footer");foot.textContent="BBQ Lab";sb.appendChild(foot);
   }
   wrap.appendChild(sb);
@@ -391,7 +393,8 @@ function renderList(){
   };
   const dlh=div("desktop-list-header");
   const dlt=div("desktop-list-title");dlt.textContent=S.filter?S.filter.toUpperCase():"Alle Rezepte";
-  const filtered=S.entries.filter(e=>(!S.filter||e.status===S.filter)&&matchesSearch(e,S.search)&&matchesTags(e));
+  const _statusOrder={"fertig":0,"in Arbeit":1,"verworfen":2};
+  const filtered=S.entries.filter(e=>(!S.filter||e.status===S.filter)&&matchesSearch(e,S.search)&&matchesTags(e)).sort((a,b)=>(_statusOrder[a.status]??1)-(_statusOrder[b.status]??1));
   const dbadge=div("badge");dbadge.textContent=filtered.length+(filtered.length===S.entries.length?" Rezepte":" / "+S.entries.length);
   dlh.appendChild(dlt);dlh.appendChild(buildSearch());dlh.appendChild(dbadge);main.appendChild(dlh);
 
@@ -508,7 +511,6 @@ function renderList(){
       (e.meats||[]).forEach(m=>{const mp=div("card-meat-pill");mp.textContent=m;ct.appendChild(mp);});
       card.appendChild(ct);
     }
-    if(e.anwendung){const ca=div("card-anwendung");ca.textContent="\ud83c\udf57 "+e.anwendung;card.appendChild(ca);}
     const st=div("stars");[1,2,3,4,5].forEach(n=>{const s=document.createElement("span");s.textContent="★";s.style.color=n<=e.rating?"var(--accent)":"var(--muted)";st.appendChild(s);});card.appendChild(st);
     const cnt=(e.ingredients||[]).filter(i=>i.name).length;
     const ic=div("ing-count");ic.textContent="\ud83e\uddc2 "+cnt+" Zutaten";card.appendChild(ic);
@@ -583,20 +585,17 @@ function renderForm(){
   const di=inp("",c.date,e=>{S.current=Object.assign({},S.current,{date:e.target.value});},{type:"date"});
   df.appendChild(dl);df.appendChild(di);wrap.appendChild(df);
 
-  // Anwendung
-  const af=div("field");
-  const al=document.createElement("label");al.className="lbl";al.textContent="Anwendung";
-  const ai=inp("",c.anwendung,e=>{S.current=Object.assign({},S.current,{anwendung:e.target.value});},{placeholder:"z.B. H\u00fchnerschenkel..."});
-  af.appendChild(al);af.appendChild(ai);wrap.appendChild(af);
-
   // Rating
   const rf=div("field");
   const rl=document.createElement("label");rl.className="lbl";rl.textContent="Bewertung";
   const sr=div("stars-input");
   for(let s=1;s<=5;s++){
     const b=document.createElement("button");b.className="star-btn";
-    b.textContent=s<=c.rating?"\u2b50":"\u2606";
-    b.addEventListener("click",()=>set({current:Object.assign({},S.current,{rating:s})}));
+    b.textContent="\u2605";b.style.color=s<=c.rating?"var(--accent)":"var(--muted)";
+    b.addEventListener("click",()=>{
+      S.current=Object.assign({},S.current,{rating:s});
+      [...sr.children].forEach((btn,i)=>{btn.style.color=(i+1)<=s?"var(--accent)":"var(--muted)";});
+    });
     sr.appendChild(b);
   }
   rf.appendChild(rl);rf.appendChild(sr);wrap.appendChild(rf);
@@ -716,7 +715,7 @@ function renderDetail(){
   dh.appendChild(btn("back-btn","\u2190",()=>set({view:"list"})));
   const di=div("detail-info");
   const dn=div("detail-name");dn.textContent=entry.name+(entry.version?" V."+entry.version:"");
-  const dm=div("detail-meta");dm.textContent=entry.date+(entry.anwendung?" \u00b7 "+entry.anwendung:"");
+  const dm=div("detail-meta");dm.textContent=entry.date;
   const ds=div("detail-stars");[1,2,3,4,5].forEach(n=>{const s=document.createElement("span");s.textContent="★";s.style.color=n<=entry.rating?"var(--accent)":"var(--muted)";ds.appendChild(s);});
   const pill=div("status-pill");
   pill.textContent=SI[entry.status]+" "+entry.status;
