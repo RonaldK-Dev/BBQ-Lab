@@ -1,200 +1,227 @@
 # CLAUDE.md — BBQ Lab
 
-> Dieses Dokument ist der **vollständige Kontext** für eine neue Chat-Session. Es enthält alles Wichtige über Architektur, aktuellen Stand und Konventionen des Projekts.
+> Vollständiger Kontext für eine neue Chat-Session. Stand: Mai 2026.
 
 ---
 
 ## Projektübersicht
 
 ### Zweck und Ziel
-**BBQ Lab** ist eine deutschsprachige Progressive Web App (PWA) für BBQ-Enthusiasten, die ihre selbst entwickelten **Gewürzmischungen, Rubs, Marinaden und Saucen dokumentieren und iterieren** möchten. Jedes Rezept ist ein "Test" mit Zutaten, Versionsnummer, Bewertung (0–5 Sterne), Status und Geschmacks-Notizen. Die App dient als persönliches Tasting-Log, um Mischungen über mehrere Iterationen hinweg zu verbessern.
+**BBQ Lab** ist eine deutschsprachige Progressive Web App (PWA) für BBQ-Enthusiasten, die ihre **Gewürzmischungen, Rubs, Marinaden, Saucen und Dips** dokumentieren und über mehrere Versionen iterieren möchten. Jedes Rezept ist ein "Test" mit Zutaten, Versionsnummer, Sterne-Bewertung, Status, optionalem Foto, Typ-/Anwendungs-Tags und Geschmacks-Notizen.
 
 **Hauptanwendungsfälle:**
-- Neue Gewürzmischung erfassen mit Zutatenliste (Brüche wie ¼, ½, ¾, 1½ als Schnellbuttons)
-- Versionen einer Mischung verfolgen (z.B. "Smoky Paprika Rub V.1, V.2, V.3")
+- Neue Gewürzmischung erfassen mit Zutatenliste (Bruchteile ¼, ½, ¾, 1, 1½, 2, 3, 4 als Schnellbuttons)
+- Versionen einer Mischung verfolgen ("Smoky Paprika Rub V.1, V.2 ...")
+- Foto pro Rezept (Supabase Storage)
+- Tags: Typ (Rub/Sauce/Marinade/Dip) + Anwendung (Rind/Schwein/Hähnchen/Lamm/Fisch/Gemüse)
 - Status tracken: "in Arbeit", "fertig", "verworfen"
-- Notizen zum Geschmack festhalten
-- Daten synchronisieren zwischen mehreren Geräten (Handy + Desktop)
+- Filtern nach Status, Typ, Anwendung, Sterne-Anzahl + Live-Suche
+- Sync zwischen Geräten (Mobile PWA + Desktop)
+- Selektiver Export (Long-Press auf Karten → Native Share Sheet)
 
 ### Tech Stack
 | Technologie | Version | Verwendung |
 |---|---|---|
-| **HTML/CSS/Vanilla JavaScript** | ES2020+ | Komplette App in einer einzigen `index.html`, kein Framework, kein Build-System |
-| **Supabase JS SDK** | v2 (via CDN) | Cloud-Sync der Rezepte (REST-API zu PostgreSQL) |
-| **localStorage** | nativ | Lokale Persistenz, Offline-Fallback |
+| **HTML/CSS/Vanilla JavaScript** | ES2020+ | Komplette App in einer einzigen `index.html`, kein Framework, kein Build |
+| **Supabase JS SDK** | v2 (CDN) | DB-Sync (PostgreSQL JSONB) + Storage (Fotos) |
+| **localStorage** | nativ | Offline-Persistenz |
+| **Web Share API** | nativ | `navigator.share()` für Export auf Mobile |
 | **Google Fonts** | – | `Bebas Neue` (Headlines), `DM Sans` (Body) |
-| **PWA Manifest** | W3C Standard | Installierbar auf iOS/Android Home-Screen |
-| **Python http.server** | 3.x | Lokaler Dev-Server (siehe `.claude/launch.json`) |
+| **PWA Manifest** | W3C | Installierbar auf iOS/Android Home-Screen |
+| **Python http.server** | 3.x | Lokaler Dev-Server (Port 4321, via `.claude/launch.json`) |
 
-**Keine Dependencies, kein npm, kein Bundler.** Die App lädt Supabase via `<script src="...cdn">` und startet sofort.
+**Keine Dependencies, kein npm, kein Bundler.** Supabase wird via `<script>`-Tag eingebunden.
 
 ### Projektstruktur
 ```
 D:\Claude Projekte\BBQ-Lab\
-├── index.html         # KOMPLETTE App: HTML, CSS (inline <style>), JS (inline <script>) – ~720 Zeilen
-├── manifest.json      # PWA Manifest (name, icons, theme_color)
-├── icon.png           # 512×512 App-Icon (BBQ-Logo)
-├── favicon.png        # 32×32 Browser-Tab-Icon
-├── favicon-16.png     # 16×16 Browser-Tab-Icon
-├── .gitignore         # Ignoriert .claude/
-├── .git/              # Git-Repo, gepusht zu github.com/RonaldK-Dev/BBQ-Lab
-└── .claude/launch.json # Dev-Server Konfig (Python http.server auf Port 4321)
+├── index.html          # KOMPLETTE App: HTML, CSS, JS — 905 Zeilen
+├── manifest.json       # PWA Manifest
+├── icon.png            # 512×512 App-Icon
+├── favicon.png         # 32×32 Browser-Icon
+├── favicon-16.png      # 16×16
+├── CLAUDE.md           # dieses Dokument
+├── .gitignore          # ignoriert .claude/
+├── .claude/launch.json # Python-Dev-Server Konfig (Port 4321)
+└── .git/               # github.com/RonaldK-Dev/BBQ-Lab (Branch: main)
 ```
-
-Es gibt **keine Build-Artefakte, kein dist/, kein node_modules**. Was du im Repo siehst, ist was im Browser läuft.
 
 ---
 
 ## Architektur & Key Decisions
 
 ### Architekturmuster
-**Single-File-App mit globalem State + Imperative DOM-Rendering.** Es gibt kein Framework, keine Komponenten, kein Virtual DOM. Stattdessen:
-
-- Ein **globales `S`-Objekt** hält den gesamten App-State (siehe unten).
-- Eine **`set(p)`-Funktion** mergt Updates in `S` und triggert `render()`.
-- **`render()`** löscht `#root.innerHTML` komplett und baut den DOM neu auf (`renderList()`, `renderForm()` oder `renderDetail()`).
-- Auf Desktop wird zusätzlich ein **Modal-Overlay** über die Liste gerendert, wenn `view==="form"` oder `view==="detail"`.
+**Single-File-App mit globalem State + Imperatives DOM-Rendering.**
+- Globales `S`-Objekt hält den State.
+- `set(p)` mergt Updates in `S` und ruft `render()` auf.
+- `render()` leert `#root.innerHTML` komplett und baut den DOM neu auf (List/Form/Detail).
+- Auf Desktop wird die Form/Detail als **Modal-Overlay** über der List gerendert.
 
 ```
-┌─────────────────────────────────────────────────┐
-│ Browser-Click → Event-Handler → set({...}) →    │
-│ render() löscht #root → renderXxx() baut neu auf│
-└─────────────────────────────────────────────────┘
+Click → Handler → set({...}) → render() leert #root → renderXxx() baut neu auf
 ```
 
-### Zentrale Datenstrukturen
-
-**State `S`** (init in Zeile 247):
+### State `S` (Init in Zeile 284)
 ```js
 {
-  view: "list" | "form" | "detail",     // welche View ist aktiv
-  entries: Entry[],                      // alle Rezepte (auch im localStorage)
-  current: Entry | null,                 // aktuell bearbeitetes Rezept (im Form)
-  detailId: number | null,               // ID des Rezepts im Detail-View
-  menuOpen: boolean,                     // Mobile-Header ⋯ Dropdown offen?
-  importOpen: boolean,                   // Import-Dialog offen?
-  importText: string,                    // Inhalt des Import-Textareas
-  focusedIng: number,                    // Index der fokussierten Zutaten-Zeile (für Bruch-Buttons)
-  sidebarOpen: boolean,                  // Desktop-Sidebar ausgeklappt? (default true)
-  sidebarMenuOpen: boolean,              // Desktop-Sidebar ≡ Dropdown offen?
-  filter: null | "fertig" | "in Arbeit" | "verworfen",  // aktiver Status-Filter
-  search: string                         // aktueller Suchtext
+  view: "list" | "form" | "detail",
+  entries: Entry[],
+  current: Entry | null,         // im Form bearbeitetes Rezept
+  detailId: number | null,
+  menuOpen: boolean,             // Mobile-Header ⋯ Dropdown
+  importOpen: boolean,
+  importText: string,
+  focusedIng: number,            // Zutatenzeile mit Fokus (Bruch-Buttons)
+  sidebarOpen: boolean,          // Desktop-Sidebar Open/Collapsed
+  sidebarMenuOpen: boolean,      // Desktop-Sidebar ≡ Dropdown
+  filter: null | "fertig" | "in Arbeit" | "verworfen",  // Status-Filter
+  search: string,
+  pendingPhoto: File | null,     // unhochgeladenes Foto im Form
+  selectionMode: boolean,        // Long-Press / Hover-Checkbox aktiv
+  selectedIds: number[],         // Ausgewählte für Export
+  typeFilter: string | null,     // Typ-Filter (Rub/Sauce/...)
+  meatFilter: string[],          // Anwendungs-Filter (Multi)
+  ratingFilter: number | null    // Sterne-Filter (1-5)
 }
 ```
 
-**Entry-Schema** (in `S.entries[]` und Supabase):
+### Entry-Schema (in `S.entries[]` und Supabase)
 ```js
 {
-  id: number,           // Date.now() bei Erstellung
-  name: string,         // z.B. "Smoky Paprika Rub"
-  version: string,      // z.B. "1" oder "2"
-  date: string,         // ISO-Datum YYYY-MM-DD
-  rating: 0..5,         // Sterne-Bewertung
-  anwendung: string,    // z.B. "Hähnchenschenkel"
-  notizen: string,      // Geschmacks-Notizen
+  id: number,           // Date.now()
+  name: string,
+  version: string,      // "1", "2", ...
+  date: string,         // ISO YYYY-MM-DD
+  rating: 0..5,
+  anwendung: string,    // LEGACY: Freitext-Feld, im UI entfernt, im Schema/Search noch erhalten
+  notizen: string,
   status: "in Arbeit" | "fertig" | "verworfen",
-  ingredients: Ingredient[]
+  photoUrl: string,     // Supabase Storage URL (oder leer)
+  type: string,         // "Rub" | "Sauce" | "Marinade" | "Dip" | ""
+  meats: string[],      // ["Rind","Schwein",...] — UI-Label heißt "Anwendung"
+  ingredients: [{ qty: string, unit: string, name: string }]
 }
 ```
 
-**Ingredient-Schema:**
+**Wichtig:** Das Feld `anwendung` ist als Freitext **aus dem UI entfernt**, bleibt aber im Schema (für alte Daten) und wird in `matchesSearch()` durchsucht. Neue Rezepte haben `anwendung: ""`.
+
+### Konstanten (Zeilen 215–223)
 ```js
-{ qty: string, unit: string, name: string }
-// qty kann ein Bruch sein: "¼", "½", "¾", "1", "1½", "2", "3", "4" oder eigene Zahl
-// unit: "TL" | "EL" | "Cup" | "g" | "ml" | "Prise" | "–"
+const KEY="bbq-tasting-log";                    // localStorage-Key
+const SUPABASE_URL="https://oltntsahncrrseufbowj.supabase.co";
+const SUPABASE_KEY="sb_publishable_...";        // publishable, kein Secret
+const UNITS=["TL","EL","Cup","g","ml","Prise","–"];
+const FRACS=["¼","½","¾","1","1½","2","3","4"];
+const TYPES=["Rub","Sauce","Marinade","Dip"];
+const MEATS=["Rind","Schwein","Hähnchen","Lamm","Fisch","Gemüse"]; // Reihenfolge fix
+const SC={"in Arbeit":"#f59e0b","fertig":"#10b981","verworfen":"#ef4444"};
+const SI={"in Arbeit":"🔬","fertig":"✅","verworfen":"❌"};
 ```
 
 ### Wichtige Designentscheidungen
 
-#### 1. **Single-File-App ohne Build-System**
-**Begründung:** Maximale Einfachheit für ein persönliches Tool, keine Build-Pipeline, keine npm-Deps. Hochladen einer Datei ⇒ Deploy fertig. Edits sind sofort live ohne Recompile.
+#### 1. Single-File-App ohne Build-System
+Maximale Einfachheit. Eine Datei hochladen ⇒ Deploy fertig.
 
-#### 2. **Imperative DOM-Manipulation statt Framework**
-**Begründung:** Die App ist klein (~700 Zeilen), ein Framework wäre Overkill. Helper-Funktionen `div()`, `btn()`, `inp()` (Zeilen 235–245) abstrahieren die Erstellung gut genug.
-**Konsequenz:** `render()` rebuildet **alles** bei jedem `set()`-Aufruf. Text-Inputs aktualisieren `S` direkt ohne `set()`, um Re-Render und damit Focus-Verlust zu vermeiden.
+#### 2. Imperative DOM-Manipulation statt Framework
+Helpers: `div(cls)`, `btn(cls,txt,cb)`, `inp(cls,val,cb,extra)`, `txt(cls,text)`, `span(text)` (Zeilen 272–282).
 
-#### 3. **Mobile-first, Desktop via einer einzigen `@media(min-width:768px)`-Query**
-**Begründung:** Die App war ursprünglich nur für Mobile. Desktop wurde nachträglich darübergelegt mit einer Media-Query und etwas zusätzlicher Render-Logik. Auf Mobile bleibt alles unverändert.
-- Mobile-Layout: 480px max-width zentriert, Cards in Spalte, Sticky-Header, FAB
-- Desktop-Layout: Sidebar (240px) + Card-Grid (auto-fill, minmax(220px, 1fr)), Modals statt Vollbild-Views
-
-#### 4. **State-Sync: localStorage primär + Supabase als Cloud-Backup**
-**Begründung:** Offline-First. Alle Writes gehen sofort in localStorage; Supabase wird via `save()` async hochgeladen. Beim App-Start versucht `loadFromSupabase()` zuerst zu laden, fällt auf localStorage zurück.
-- **Pull-Triggers:** App-Start, Pull-to-Refresh (Mobile), alle 10s im Hintergrund (setInterval)
-- **Push-Triggers:** `save()` nach jedem Speichern in `doSave()`
-- **Supabase-Schema:** Tabelle `entries`, Spalten: `id` (PK), `data` (JSONB = das ganze Entry-Objekt), `updated_at`
-
-#### 5. **`set()`-Funktion als einziger State-Update-Punkt**
+#### 3. `set()` als zentraler State-Updater
 ```js
-function set(p) { S = Object.assign({}, S, p); render(); }
+function set(p){S=Object.assign({},S,p);render();}
 ```
-**Begründung:** Eine Zeile. Vorhersehbar. Alle Mutations triggern Re-Render. Vorher war das eine 53-Zeilen-Funktion mit Memory-Leak (siehe Git-History).
+**Aber:** Text-Inputs und Tag-Pills mutieren `S.current` direkt **ohne** `set()`, um Re-Render-Flicker und Fokus-Verlust zu vermeiden. Sie aktualisieren stattdessen einzelne DOM-Elemente (z.B. `pill.classList.toggle("active",...)` oder `btn.style.color=...`).
 
-#### 6. **CSS-Variable `--st-color` für Status-Karten-Stripe**
+#### 4. Sortierreihenfolge: Fertig → In Arbeit → Verworfen
+```js
+const _statusOrder={"fertig":0,"in Arbeit":1,"verworfen":2};
+filtered.sort((a,b)=>(_statusOrder[a.status]??1)-(_statusOrder[b.status]??1));
+```
+In `renderList()` (Zeile 396f).
+
+#### 5. Mobile-First mit `@media(min-width:768px)` für Desktop
+- Mobile: 480px max-width, Cards in Spalte, Sticky-Header, FAB
+- Desktop: Sidebar (240px) + Card-Grid + Modals
+
+#### 6. Offline-First + Cloud-Sync
+- localStorage = Source of Truth lokal
+- Supabase = Sync-Backend
+- **Pull:** App-Start, Pull-to-Refresh, setInterval alle 10s
+- **Push:** Nach jedem `save()`
+- Supabase-Tabelle `entries`: `id BIGINT PK`, `data JSONB`, `updated_at TIMESTAMPTZ`
+
+#### 7. Foto-Upload via Supabase Storage
+- Bucket: `recipe-photos` (mit Anon-INSERT/UPDATE-RLS-Policies)
+- Pfad: `<entryId>.<ext>`
+- Upload erst in `doSave()` (nicht beim Auswählen) — `S.pendingPhoto` hält die File temporär.
+- `entry.photoUrl` speichert die public URL.
+
+#### 8. Export via Web Share API
+`doExport()` (Zeile 786) erzeugt eine `.json`-Datei und ruft `navigator.share({files:[file]})` auf. Fallback: `doDownload()`. Optionales Argument `entriesToExport` für selektiven Export.
+
+#### 9. Long-Press Selektion (Mobile) + Hover-Checkbox (Desktop)
+- Mobile: 500ms Long-Press auf Karte → `selectionMode:true`, Checkbox erscheint.
+- Desktop: `.entry-card:hover .card-check { opacity:1 }` zeigt Checkbox bei Hover.
+- iOS-Textselektion blockiert: `.entry-card { -webkit-user-select:none; -webkit-touch-callout:none }`.
+
+#### 10. Pull-to-Refresh = `location.reload()`
+Nicht nur Daten-Sync, sondern komplettes Reload — damit auch neuer App-Code geladen wird (PWA-Cache umgehen).
+
+#### 11. iOS Auto-Zoom-Prevention
+Alle Inputs/Selects/Textareas haben mindestens **16px font-size** auf Mobile.
+
+#### 12. Scrollbar-Gutter Stable
+`.main-content { scrollbar-gutter:stable }` verhindert Layout-Shift beim Filtern.
+
+#### 13. Badge mit fester Breite
+`.desktop-list-header .badge { min-width:90px; text-align:center }` — kein Shift wenn der Text von "X Rezepte" auf "Y / X" wechselt.
+
+#### 14. Dropdown-Menüs — zwei Patterns
+- **Mobile (⋯):** globaler `document.click`-Listener schließt bei Klick außerhalb von `.menu-wrap`. **Wichtig:** der Menü-Button selbst nutzt `e.stopPropagation()` — sonst feuerte der Outside-Handler direkt nach dem Open-Click (Bug-Fix aus Commit `d208c7d`).
+- **Desktop-Sidebar (≡):** `mouseleave` auf das Dropdown.
+
+#### 15. Card-Stripe via CSS-Variable
 ```js
 card.style.setProperty("--st-color", SC[e.status]);
-// CSS: .entry-card::before { background: var(--st-color, fallback) }
 ```
-Karten zeigen einen 4px breiten Status-Farbstrich links (grün/amber/rot/orange-Fallback). Status-Farben kommen aus dem `SC`-Objekt (Zeile 194).
-
-#### 7. **iOS Auto-Zoom-Prevention**
-**Alle Inputs/Selects/Textareas auf Mobile haben `font-size: 16px`.** Kleinere Werte (z.B. 13px für `.search-input` auf Desktop) sind nur via `@media(min-width:768px)` aktiv. Sonst zoomt iOS Safari automatisch und kehrt nicht zurück.
-
-#### 8. **Scrollbar-Gutter Stable**
-`.main-content` hat `scrollbar-gutter:stable`, damit das Auftauchen/Verschwinden der Scrollbar (bei Filter-/Such-Wechseln) **keinen Layout-Shift** im Header verursacht.
-
-#### 9. **Badge mit fester Breite im Desktop-Header**
-`.desktop-list-header .badge { min-width: 90px; text-align: center }` — verhindert dass die Suchleiste nach rechts shiftet, wenn der Badge-Text sich von "X Rezepte" (81px) auf "0 / 2" (52px) ändert.
-
-#### 10. **Dropdown-Menüs: zwei verschiedene Patterns**
-- **Mobile (⋯)**: globaler `document.addEventListener("click", ...)` schließt das Menü bei Klick außerhalb von `.menu-wrap` (Zeile 703–708)
-- **Desktop-Sidebar (≡)**: `mouseleave` auf `dd` (Zeile 274) — funktioniert nur mit Maus, ok da Sidebar nur auf Desktop
-
-### API-Design / Datenbankschema
-
-**Supabase Tabelle `entries`:**
-```sql
-CREATE TABLE entries (
-  id BIGINT PRIMARY KEY,           -- Date.now()
-  data JSONB,                      -- komplettes Entry-Objekt
-  updated_at TIMESTAMPTZ           -- für Sort/Sync
-);
-```
-Zugriff via Supabase JS SDK mit dem **publishable** Key (siehe Zeilen 190–191, sind öffentlich, kein Geheimnis). Row Level Security ist offen oder dem User überlassen — die App nutzt einen geteilten Datenbestand ohne User-Auth.
+4px breiter Status-Farbstrich links auf jeder Karte.
 
 ---
 
 ## Aktueller Stand
 
-### Was funktioniert (Stand: Mai 2026)
-- ✅ **CRUD auf Rezepte**: Anlegen, Bearbeiten, Löschen, Detail-Ansicht
-- ✅ **Bruch-Schnellbuttons** für Mengen (¼, ½, ¾, 1, 1½, 2, 3, 4)
-- ✅ **Sterne-Bewertung** 0–5
-- ✅ **Status-System** mit drei Zuständen + Farbcodierung
-- ✅ **Cloud-Sync** via Supabase (Push bei Save, Pull alle 10s + bei PTR + bei Start)
-- ✅ **Offline-First** über localStorage
-- ✅ **Pull-to-Refresh** (Mobile)
-- ✅ **Export/Import** über JSON-Text (Clipboard/Textarea)
-- ✅ **PWA-installierbar** (manifest.json befüllt)
-- ✅ **Desktop-Layout** mit einklappbarer Sidebar + Card-Grid + Modals
-- ✅ **Status-Filter** durch klickbare Stats in der Sidebar
-- ✅ **Live-Suche** in Name/Anwendung/Notizen/Zutaten (Desktop + Mobile)
-- ✅ **X-Clear-Button** in der Suche
-- ✅ **Status-farbiger Karten-Strich** (grün/amber/rot)
-- ✅ **Smooth Animations** (Modal-Fade, Dropdown-Slide, Card-Hover-Lift)
-- ✅ **iOS Auto-Zoom-Fix** (16px Mindest-Font-Size)
-- ✅ **Header-Stabilität** bei Filter-/Such-Änderungen (Badge-Width fix)
-- ✅ **Mobile-Menü** schließt bei Tippen außerhalb
+### Was funktioniert ✅
+- CRUD: Anlegen, Bearbeiten, Löschen, Detail
+- Bruch-Schnellbuttons für Zutaten-Mengen
+- Sterne-Bewertung 0–5
+- Status-System (in Arbeit/fertig/verworfen) mit Farbcodierung
+- **Foto pro Rezept** (Supabase Storage, mit Preview im Form)
+- **Tags:** Typ (Single-Select) + Anwendung (Multi-Select)
+- **Filter-Pills** in Sidebar (Desktop) und Mobile-Scroll-Leiste
+- **Sterne-Filter** als klickbarer Sterne-Balken
+- Cloud-Sync via Supabase (Push bei Save, Pull alle 10s + bei Reload)
+- Offline via localStorage
+- Pull-to-Refresh mit `location.reload()`
+- Export via Web Share API (Mobile) / Download (Desktop) — selektiv über Long-Press / Hover-Checkbox
+- Import via JSON-Textarea
+- PWA-installierbar
+- Desktop-Layout mit einklappbarer Sidebar + Modals
+- Live-Suche in Name/Notizen/Zutaten/anwendung-Legacy
+- "Rezepte"-Klick im Sidebar-Stat resettet **alle** Filter (Status, Typ, Anwendung, Rating)
+- Sortierung Fertig → In Arbeit → Verworfen über alle Views
+- Status-farbiger Card-Stripe
+- Konsistente Stern-Darstellung (★) in Karten, Detail, Sidebar-Schnitt, Form
 
-### Was ist in Arbeit
-Aktuell **keine offenen Tasks**. Letzter Commit: `25014b3 — 3 Fixes: Header-Shift, iOS-Auto-Zoom, Mobile-Menu Outside-Close`.
+### In Arbeit
+Aktuell **keine offenen Tasks**. Letzter Commit: `919f79a — Rename: Fleisch -> Anwendung im UI`.
 
-### Bekannte Bugs / offene Probleme
-- **Kein Service Worker** → keine echte Offline-Fähigkeit, der erste Page-Load braucht immer Internet
-- **Keine User-Authentication** → alle Nutzer der Supabase-DB sehen dieselben Rezepte (privates Tool, ok für jetzt)
-- **Datum-Input auf iOS** kann je nach Browser unterschiedlich aussehen (native Picker)
-- **Keine Validierung** bei Import-JSON außer "ist es ein Array?" → defektes JSON führt zu Alert, aber Inhalt wird nicht geprüft
-- **Manifest hat nur 1 Icon-Größe (512×512)** → Lighthouse mosert evtl., funktioniert aber
+### Bekannte Bugs / Offene Punkte
+- **Kein Service Worker** → erste Page-Load braucht Internet, keine echte Offline-Fähigkeit
+- **Keine User-Auth** → alle Nutzer der Supabase-DB sehen dieselben Rezepte (privates Tool, ok für jetzt)
+- **Datum-Picker auf iOS** je nach Browser unterschiedlich (nativer Picker)
+- **Import-Validierung** prüft nur `Array.isArray()`, keine Schema-Validierung der Entries
+- **Manifest hat nur 512×512-Icon** — Lighthouse mäkelt, funktioniert aber
+- **`anwendung`-Freitextfeld** ist im UI weg, im Schema noch da — kann irgendwann ganz entfernt werden, sobald sicher dass kein Bestand darauf zugreift
 
 ---
 
@@ -204,22 +231,16 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `25014b3 — 3 Fixes: Header-Sh
 
 | Prio | Feature | Aufwand | Begründung |
 |---|---|---|---|
-| 🥇 #1 | **📸 Foto pro Rezept** | Mittel-Groß | Größter visueller Sprung. Speicherung via Supabase Storage. Macht aus einer Liste eine richtig schöne Food-App. |
-| 🥈 #2 | **🏷️ Tags / Kategorien** | Mittel | Typ-Tags (Rub/Sauce/Marinade) + Fleisch-Tags (Hähnchen/Rind/...). Klickbare Pills auf Karten, Multi-Tag-Filter. |
-| 🥉 #3 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Dedizierte Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen". |
-| 4 | **🔌 Service Worker** | Klein | Echter Offline-Cache + bessere Update-Kontrolle. Datei `sw.js` + `navigator.serviceWorker.register()` ergänzen. |
-| 5 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff. |
-| 6 | **📋 "Als V.2 duplizieren"** | Trivial | Im Detail-View ein Button, der `openNew()` mit Daten der aktuellen Version + version+1 aufruft. |
-| 7 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→=Nav im Detail. |
-| 8 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild zum Teilen via WhatsApp. |
-| 9 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky;top:[header-height]` auf `.mobile-search-wrap`. |
-| 10 | **Sync-Status-Indikator** | Trivial | Kleines Icon: läuft/fertig/Fehler. |
+| 🥇 #1 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
+| 🥈 #2 | **📋 "Als V.2 duplizieren"** | Trivial | Im Detail-View Button → `openNew()` mit Daten der aktuellen Version + version+1 |
+| 🥉 #3 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff |
+| 4 | **🔌 Service Worker** | Klein | Echter Offline-Cache + bessere Update-Kontrolle |
+| 5 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
+| 6 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
+| 7 | **Sync-Status-Indikator** | Trivial | Kleines Icon: läuft/fertig/Fehler |
+| 8 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
 
-### Was als nächstes implementiert werden soll
-**Empfehlung: Mit `#1 (Foto pro Rezept)` starten**, weil es den visuellen Eindruck am stärksten verändert. Implementierungs-Skizze:
-1. Im Form-View: File-Input + Drag-and-Drop-Zone
-2. Bei Save: Datei in Supabase Storage hochladen, URL ins Entry-Objekt schreiben (`entry.photoUrl`)
-3. Im Detail- und Card-View: Bild rendern (Card: Thumbnail oben oder Hintergrund mit Overlay)
+**Empfehlung als nächstes:** `#2 (Duplizieren)` — Trivial-Aufwand mit hohem Nutzen, da das Versions-Iterations-Konzept der Kern der App ist.
 
 ---
 
@@ -227,103 +248,124 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `25014b3 — 3 Fixes: Header-Sh
 
 ### Coding-Style
 - **Indentation:** 2 Spaces
-- **JS-Style:** Minimal-Whitespace, viele Operationen in einer Zeile. Beispiel: `const cn=div("card-name");cn.textContent=e.name;`
-  → Begründung: Die ganze App ist eine "code golf"-artige Single-File-App, Lesbarkeit wird durch klare Funktions-Grenzen erreicht, nicht durch luftiges Layout.
-- **CSS:** Alles inline im `<style>`-Tag, minified (eine Regel pro Zeile)
-- **Strings:** Doppelte Anführungszeichen für Strings, einfache nur in HTML-Attributen
-- **Funktionen:** `function`-Deklarationen (kein `const xyz = () => {}`) für Top-Level. Inline-Handler dürfen Arrow-Funcs sein.
+- **JS-Style:** Minimal-Whitespace, mehrere Statements pro Zeile bei Render-Code. Beispiel: `const cn=div("card-name");cn.textContent=e.name;`
+- **CSS:** Inline im `<style>`-Tag, minified (eine Regel pro Zeile)
+- **Strings:** Doppelte Anführungszeichen
+- **Funktionen:** `function`-Deklarationen für Top-Level, Arrow-Funcs nur als Inline-Handler
 - **Naming:**
-  - State-Felder: camelCase (`sidebarOpen`, `importText`)
-  - CSS-Klassen: kebab-case (`sidebar-dropdown-item`, `entry-card`)
-  - JS-Variablen: kurz im Render-Code (`sb`, `mWrap`, `dlh`), beschreibend in Logik (`filtered`, `avgRating`)
-  - Sprache: **Deutsch** für alle User-facing Strings; Code-Identifier auf Englisch (oder Denglisch wie `notizen`, `anwendung`)
+  - State: camelCase (`sidebarOpen`, `pendingPhoto`, `typeFilter`)
+  - CSS: kebab-case (`tag-pill`, `card-tags`, `mobile-filter-wrap`)
+  - JS-Variablen im Render-Code: kurz (`sb`, `mWrap`, `dlh`), in Logik beschreibend
+  - **User-facing: Deutsch** (Code-Identifier teils Denglisch: `notizen`, `anwendung`, `meats`)
 
 ### Neue Features hinzufügen
-1. **State-Erweiterung:** Neue Felder im `S`-Initializer (Zeile 247) hinzufügen mit sinnvollem Default.
-2. **CSS:** Neue Styles im `<style>`-Tag platzieren:
-   - Mobile-/Base-Styles **vor** dem `@media`-Block
-   - Desktop-Styles **innerhalb** des `@media(min-width:768px)`-Blocks
-   - **iOS-Regel:** Inputs auf Mobile **immer ≥16px font-size**
-3. **JS:** Neue Render-Logik in `renderList()`, `renderForm()`, oder `renderDetail()`. Bei größeren Sachen: eigene Funktion.
-4. **State-Updates** **immer** über `set({...})`, niemals direkt `S.foo = bar` (außer bei Text-Inputs, die kein Re-Render auslösen sollen).
-5. **Verifikation:** Browser-Preview auf Port 4321 öffnen, mit `preview_eval` per JS testen (Screenshots timeouten häufig).
-6. **Commit:** Aussagekräftige Commit-Message mit "Co-Authored-By: Claude Sonnet 4.7 <noreply@anthropic.com>".
+1. **State** erweitern in `S`-Init (Zeile 284) mit sinnvollem Default.
+2. **CSS** im `<style>`-Tag — Mobile-Basis vor `@media`-Block, Desktop-Overrides innerhalb. **Inputs mindestens 16px font-size auf Mobile.**
+3. **Konstanten** ggf. zu `TYPES`/`MEATS`/`UNITS`/`FRACS` ergänzen (Zeilen 218–221).
+4. **Render-Logik** in `renderList()` / `renderForm()` / `renderDetail()`. Bei größeren Sachen: eigene Funktion.
+5. **State-Updates:** `set({...})` für globale Änderungen, **direkte Mutation** von `S.current` + DOM-Updates für Form-Interaktionen ohne Re-Render-Flicker.
+6. **Filter:** Neue Filter erweitern `matchesTags(e)` (Zeile 270) **und** den `allActive`-Check in der Sidebar (Zeile 322) **und** den "Rezepte"-Reset-Handler.
+7. **Verifikation** im Browser-Preview (Port 4321), Eval-basierte Tests via Preview-MCP.
+8. **Commit** auf Deutsch mit Begründung + Co-Authored-By Claude.
+9. **Push:** Im BBQ-Lab-Projekt **immer automatisch nach Commit** (User-Memory: `feedback_bbqlab_autopush.md`).
 
 ### Testing-Strategie
-**Es gibt keine automatisierten Tests.** Verifikation erfolgt durch:
+**Keine automatisierten Tests.** Verifikation läuft über:
 1. **Browser-Preview** auf `http://localhost:4321` (Python http.server via `.claude/launch.json`)
-2. **Manuelle Tests in beiden Viewports**: Mobile (375×812) und Desktop (1280×800)
-3. **Eval-basierte Smoke-Tests** via Claude Preview MCP-Tool, z.B.:
+2. **Beide Viewports**: Mobile (375×812) und Desktop (1280×800)
+3. **Eval-Tests** via `mcp__Claude_Preview__preview_eval`:
    ```js
-   (async()=>{ set({filter:'fertig'}); await new Promise(r=>setTimeout(r,200));
+   (async()=>{ set({typeFilter:'Sauce'}); await new Promise(r=>setTimeout(r,200));
      return document.querySelectorAll('.entry-card').length; })()
    ```
-4. **Mobile-Realtest** auf iPhone via Safari → "Zum Home-Bildschirm hinzufügen" (PWA-Install)
-5. **Bei jedem Bug:** zuerst Eval-Test schreiben, der das Problem reproduziert; dann fixen.
+4. **Mobile-Realtest** auf iPhone via PWA-Install
+5. **Bei Bugs:** Eval-Test schreiben, der reproduziert → fixen → Eval erneut
 
-**Wichtiger Hinweis:** Screenshots via `preview_screenshot` timeouten manchmal nach 30s. Dann auf Eval-basierte Verifikation umsteigen.
+**Hinweis:** `preview_screenshot` timeouted oft nach 30s — auf Eval-Tests umsteigen.
 
 ---
 
 ## Kritische Dateien
 
-### `index.html` (719 Zeilen) — die ganze App
-Eine einzige Datei mit drei klar getrennten Abschnitten:
+### `index.html` (905 Zeilen) — komplette App
 
-- **Zeilen 1–17:** `<head>` mit Meta-Tags (Viewport, PWA, theme-color), Google-Fonts-Import, Icon-Links, Manifest-Reference
-- **Zeilen 18–183:** `<style>` Block
-  - Zeilen 19–107: Base CSS (Mobile + alle gemeinsamen Styles)
-  - Zeilen 108–117: Mobile-spezifische CSS (Sidebar default hidden, Search-Wrap, Mobile-Search-Wrap)
-  - Zeilen 118–182: `@media(min-width:768px)` Desktop-Overrides (Sidebar visible, Modal-Styles, Hover-States, Animations)
-- **Zeilen 184–717:** `<script>` mit gesamter JS-Logik
-  - Zeilen 189–195: Konstanten (Supabase-Creds, UNITS, FRACS, SC=Status-Colors, SI=Status-Icons)
-  - Zeilen 197–245: Helper-Funktionen (load/save/sync, div/btn/inp, stars, matchesSearch)
-  - Zeile 247: `S`-State-Init
-  - Zeile 248: `set(p)` — der zentrale State-Updater
-  - Zeilen 250–415: `renderList()` — Sidebar + Card-Grid + Mobile-Header + Search
-  - Zeilen 417–535: `renderForm()` — Create/Edit-Form mit Bruch-Buttons
-  - Zeilen 537–586: `renderDetail()` — Readonly-Detail-View
-  - Zeilen 588–613: Action-Funktionen (openNew, openEdit, doSave, doExport, doImport)
-  - Zeilen 615–655: `render()` — Dispatcher mit Desktop-Modal-Logik + Search-Focus-Preservation
-  - Zeilen 656–692: `initPTR()` — Pull-to-Refresh Touch-Handler
-  - Zeilen 694–716: Top-Level Init-IIFE — initial load, register PTR, global click-handler für Mobile-Menü, setInterval-Polling
+| Bereich | Zeilen | Inhalt |
+|---|---|---|
+| `<head>` | 1–17 | Meta-Tags, PWA-Konfig, Fonts, Icons, Manifest |
+| `<style>` Base | 19–~120 | Mobile-Basis + gemeinsame Styles |
+| `<style>` Mobile-only | ~120–~150 | Sidebar default hidden, Mobile-Search-Wrap, Mobile-Filter-Wrap |
+| `<style>` `@media ≥768px` | ~150–~210 | Desktop-Overrides, Modal-Styles, Hover, Animations |
+| **Konstanten** | 215–223 | Keys, URLs, UNITS, FRACS, TYPES, MEATS, SC, SI |
+| **Storage/Sync** | 225–267 | `load`, `save`, `getSB`, `syncToSupabase`, `loadFromSupabase`, `uploadPhoto` |
+| **Helpers** | 268–282 | `stars`, `matchesSearch`, `matchesTags`, `div`, `btn`, `inp`, `txt`, `span` |
+| **State** | 284 | `S`-Init |
+| **`set()`** | 286 | Zentraler Updater |
+| **`renderList()`** | 288–538 | Sidebar + Card-Grid + Mobile-Header + Search + Filter-Pills + Long-Press-Handling |
+| **`renderForm()`** | 540–707 | Create/Edit-Form: Name+Version, Foto, Datum, Rating, Status, Typ-Pills, Anwendung-Pills, Zutaten, Notizen |
+| **`renderDetail()`** | 709–765 | Readonly-Detail-View mit Foto, Tags, Sternen, Zutaten-Tabelle, Edit/Delete |
+| **Actions** | 767–804 | `openNew`, `openEdit`, `doSave` (mit Photo-Upload), `doDownload`, `doExport` (Share Sheet), `doImport` |
+| **`render()`** | 806–846 | Dispatcher, Desktop-Modal-Overlay, Search-Focus-Preservation |
+| **`initPTR()`** | 849–878 | Pull-to-Refresh Touch-Handler (→ `location.reload()`) |
+| **Init-IIFE** | 880–902 | Initial Load, PTR-Register, Mobile-Menü-Outside-Click, 10s-Polling |
 
 ### `manifest.json`
-PWA-Manifest. Wichtig: `display:"standalone"` macht die App fullscreen auf iOS-Home-Screen. Nur **ein Icon (512×512)** ist eingetragen — könnte um 192×192 ergänzt werden für besseren Android-Support.
+PWA-Manifest. `display:"standalone"` für Fullscreen auf iOS. Aktuell nur ein Icon (512×512, `purpose:"any maskable"`).
 
 ### `icon.png`
-512×512 PWA-Install-Icon, BBQ-Grill-Logo mit "BBQ" Schriftzug. `purpose: "any maskable"` im Manifest.
+512×512 BBQ-Grill-Logo mit "BBQ"-Schriftzug.
 
 ### `.claude/launch.json`
-Dev-Server-Konfiguration für die `mcp__Claude_Preview__*` Tools:
-```json
-{ "name": "BBQ-Lab", "runtimeExecutable": "python",
-  "runtimeArgs": ["-m", "http.server", "4321", "--directory", "BBQ-Lab"],
-  "port": 4321 }
-```
-**Wichtig:** Liegt in `D:\Claude Projekte\.claude\` (Projekt-Root ist `D:\Claude Projekte\`, nicht der BBQ-Lab-Subordner).
+Dev-Server für Preview-MCP (Port 4321, Python http.server). **Liegt in `D:\Claude Projekte\.claude\`** (Projekt-Root ist `D:\Claude Projekte\`, nicht das BBQ-Lab-Subverzeichnis).
 
 ### `.gitignore`
-Ignoriert nur `.claude/`. Keine `node_modules` etc., da keine Build-Pipeline.
+Ignoriert nur `.claude/`.
+
+---
+
+## Supabase-Backend
+
+### Tabelle `entries`
+```sql
+CREATE TABLE entries (
+  id BIGINT PRIMARY KEY,
+  data JSONB,                  -- komplettes Entry-Objekt
+  updated_at TIMESTAMPTZ
+);
+```
+RLS: offen oder Anon-INSERT/UPDATE/SELECT-Policies. Kein User-Auth.
+
+### Storage-Bucket `recipe-photos`
+- Public Bucket
+- Anon-Policies für INSERT + UPDATE (über SQL Editor angelegt)
+- Pfad-Schema: `<entryId>.<ext>`
+
+### Credentials
+Im Code hardcoded (Zeilen 216–217). Der `sb_publishable_...` Key ist sicher öffentlich.
 
 ---
 
 ## Quick-Start für eine neue Session
 
-1. **Code lesen:** Mit `Read` die `index.html` vollständig laden (ist nur ~720 Zeilen).
-2. **Preview starten:** `mcp__Claude_Preview__preview_start({name:"BBQ-Lab"})` → läuft auf Port 4321.
-3. **Verifikation:** Preferiere `mcp__Claude_Preview__preview_eval` über `_screenshot` (Screenshots timeouten oft).
-4. **State-Inspektion:** `(async()=>JSON.stringify({entries:S.entries.length, view:S.view, ...}))()` in eval.
-5. **Mobile testen:** Viewport mit `preview_resize({preset:"mobile"})` auf 375×812.
-6. **Bei Code-Änderung:** `location.reload()` via eval, dann erneut testen.
-7. **Commit:** Auf Deutsch, mit Begründung + Co-Authored-By Claude.
-8. **Push:** Nur wenn User explizit OK gibt — er hat in der Vergangenheit Pushes abgebrochen, um noch zu testen.
+1. **Code lesen:** `Read` auf `index.html` (905 Zeilen, evtl. in zwei Blöcken).
+2. **Preview starten:** `mcp__Claude_Preview__preview_start({name:"BBQ-Lab"})` → Port 4321.
+3. **Verifikation:** Preferiere `preview_eval` über `_screenshot` (Screenshots timeouten oft).
+4. **State-Inspektion:**
+   ```js
+   (async()=>JSON.stringify({entries:S.entries.length,view:S.view,
+     filter:S.filter,typeFilter:S.typeFilter,meatFilter:S.meatFilter,
+     ratingFilter:S.ratingFilter}))()
+   ```
+5. **Mobile testen:** `preview_resize({preset:"mobile"})` → 375×812.
+6. **Nach Code-Änderung:** `location.reload()` via eval.
+7. **Commit:** Auf Deutsch + Begründung + Co-Authored-By Claude.
+8. **Push:** **Automatisch nach jedem Commit** (User-Memory `feedback_bbqlab_autopush.md`).
 
 ---
 
 ## User-Präferenzen
 
-- **Sprache:** Antworte immer auf Deutsch (siehe `~/.claude/projects/D--Claude-Projekte/memory/feedback_language.md`)
-- **Workflow:** User testet gerne im Browser-Preview, gibt direktes Feedback ("verrückt sich nach rechts", "das Bild wird größer"). Reagiere mit gezielten Eval-Tests + Fix, nicht mit theoretischer Analyse.
-- **Pushes:** **Nicht ungefragt pushen.** User möchte vor jedem Push selbst entscheiden.
-- **Mobile-Anwendung:** User hat die PWA via Safari → "Zum Home-Bildschirm" installiert. Cache-Invalidierung passiert nicht automatisch — bei sichtbaren Änderungen explizit "App vom Home-Screen löschen und neu installieren" empfehlen.
+- **Sprache:** Immer auf Deutsch antworten (Memory: `feedback_language.md`)
+- **Auto-Push im BBQ-Lab:** Nach jedem `git commit` sofort `git push` — ohne zu fragen (Memory: `feedback_bbqlab_autopush.md`)
+- **Workflow:** User testet im Browser-Preview, gibt direktes visuelles Feedback ("verrückt sich nach rechts", "der Stern ist zu klein"). Auf gezielte Eval-Tests + Fix reagieren, nicht theoretische Analyse.
+- **Mobile-Anwendung:** User hat die PWA via Safari → "Zum Home-Bildschirm" installiert. Bei größeren UI-Änderungen ggf. App neu installieren empfehlen.
+- **Antworten kurz halten.** User mag knappe, ergebnis-orientierte Antworten.
