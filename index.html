@@ -637,11 +637,18 @@ async function doSave(){
   S.entries=ex?S.entries.map(e=>e.id===c.id?c:e):[c,...S.entries];
   save(S.entries);set({view:"list"});
 }
-function doExport(){
-  const t=JSON.stringify(S.entries,null,2);
-  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>alert("\u2705 Kopiert! F\u00fcge den Text in deine Notizen-App ein."));}
-  else{prompt("Kopiere:",t);}
-  set({menuOpen:false});
+function doDownload(blob,filename){
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+}
+async function doExport(){
+  const filename="bbq-lab-export-"+new Date().toISOString().split("T")[0]+".json";
+  const blob=new Blob([JSON.stringify(S.entries,null,2)],{type:"application/json"});
+  const file=new File([blob],filename,{type:"application/json"});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:"BBQ Lab Export"});}
+    catch(e){if(e.name!=="AbortError")doDownload(blob,filename);}
+  }else{doDownload(blob,filename);}
+  set({menuOpen:false,sidebarMenuOpen:false});
 }
 function doImport(){
   try{
