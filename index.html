@@ -115,6 +115,11 @@
     .search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--border);color:var(--text);font-size:14px;line-height:20px;text-align:center;cursor:pointer;transition:background 0.15s,color 0.15s;user-select:none}
     .search-clear:hover{background:var(--accent);color:#fff}
     .mobile-search-wrap{padding:10px 20px 4px}
+    .card-img{width:calc(100% + 32px);height:120px;object-fit:cover;border-radius:10px 10px 0 0;margin:-16px -16px 12px;display:block}
+    .detail-photo{width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin-bottom:16px;display:block}
+    .photo-pick{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:14px;cursor:pointer;margin-bottom:16px;line-height:1.8}
+    .photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:6px;cursor:pointer;display:block}
+    .photo-rm{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0 0 12px;display:block}
     @media(min-width:768px){
       body{overflow:hidden}
       #root{max-width:100%;margin:0}
@@ -229,6 +234,14 @@ async function loadFromSupabase(){
   }catch(e){console.log("Load error:",e);}
   return null;
 }
+async function uploadPhoto(entryId,file){
+  const ext=file.name.split(".").pop()||"jpg";
+  const path=entryId+"."+ext;
+  const db=getSB();
+  const {data,error}=await db.storage.from("recipe-photos").upload(path,file,{upsert:true});
+  if(error)throw error;
+  return db.storage.from("recipe-photos").getPublicUrl(path).data.publicUrl;
+}
 function stars(r){return[1,2,3,4,5].map(s=>s<=r?"\u2b50":"\u2606").join("");}
 function matchesSearch(e,q){if(!q)return true;const t=q.toLowerCase();const hay=(e.name+" "+(e.anwendung||"")+" "+(e.notizen||"")+" "+(e.ingredients||[]).map(i=>i.name||"").join(" ")).toLowerCase();return hay.includes(t);}
 
@@ -244,7 +257,7 @@ function inp(cls,val,cb,extra){
 function txt(cls,text){const e=document.createElement("p");e.className=cls;e.textContent=text;return e;}
 function span(text){return document.createTextNode(text);}
 
-let S={view:"list",entries:load(),current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:""};
+let S={view:"list",entries:load(),current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null};
 function set(p){S=Object.assign({},S,p);render();}
 
 function renderList(){
@@ -392,6 +405,7 @@ function renderList(){
     const card=div("entry-card");
     card.style.setProperty("--st-color",SC[e.status]);
     card.addEventListener("click",()=>set({view:"detail",detailId:e.id}));
+    if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;card.appendChild(ci);}
     const ctop=div("card-top");
     const nd=div("");
     const cn=div("card-name");cn.textContent=e.name+(e.version?" V."+e.version:"");
@@ -434,6 +448,27 @@ function renderForm(){
   vb.appendChild(vt);vb.appendChild(vi);
   nr.appendChild(ni);nr.appendChild(vb);
   nf.appendChild(nl);nf.appendChild(nr);wrap.appendChild(nf);
+
+  // Photo
+  const phf=div("field");
+  const phl=document.createElement("label");phl.className="lbl";phl.textContent="Foto";
+  const phi=document.createElement("input");phi.type="file";phi.accept="image/*";phi.style.display="none";
+  phi.addEventListener("change",ev=>{if(ev.target.files&&ev.target.files[0]){S.pendingPhoto=ev.target.files[0];render();}});
+  phf.appendChild(phl);
+  const previewSrc=S.pendingPhoto?URL.createObjectURL(S.pendingPhoto):(c.photoUrl||"");
+  if(previewSrc){
+    const pimg=document.createElement("img");pimg.className="photo-preview";pimg.src=previewSrc;pimg.alt="Foto";
+    pimg.addEventListener("click",()=>phi.click());
+    phf.appendChild(pimg);
+    const prm=document.createElement("button");prm.className="photo-rm";prm.textContent="✕ Foto entfernen";
+    prm.addEventListener("click",()=>{S.pendingPhoto=null;S.current=Object.assign({},S.current,{photoUrl:""});render();});
+    phf.appendChild(prm);
+  }else{
+    const ppick=div("photo-pick");ppick.innerHTML="📷<br>Foto aufnehmen / wählen";
+    ppick.addEventListener("click",()=>phi.click());
+    phf.appendChild(ppick);
+  }
+  phf.appendChild(phi);wrap.appendChild(phf);
 
   // Date
   const df=div("field");
@@ -538,6 +573,7 @@ function renderDetail(){
   const entry=S.entries.find(e=>e.id===S.detailId);
   if(!entry)return div("");
   const wrap=div("detail-wrap");
+  if(entry.photoUrl){const pi=document.createElement("img");pi.className="detail-photo";pi.src=entry.photoUrl;pi.alt=entry.name;wrap.appendChild(pi);}
   const dh=div("detail-header");
   dh.appendChild(btn("back-btn","\u2190",()=>set({view:"list"})));
   const di=div("detail-info");
@@ -586,13 +622,17 @@ function renderDetail(){
 }
 
 function openNew(){
-  set({view:"form",focusedIng:0,current:{id:Date.now(),name:"",version:"",date:new Date().toISOString().split("T")[0],rating:0,anwendung:"",notizen:"",status:"in Arbeit",ingredients:[{qty:"",unit:"TL",name:""}]}});
+  set({view:"form",focusedIng:0,pendingPhoto:null,current:{id:Date.now(),name:"",version:"",date:new Date().toISOString().split("T")[0],rating:0,anwendung:"",notizen:"",status:"in Arbeit",photoUrl:"",ingredients:[{qty:"",unit:"TL",name:""}]}});
 }
 function openEdit(e){
-  set({view:"form",focusedIng:0,current:Object.assign({},e,{ingredients:e.ingredients.map(i=>Object.assign({},i))})});
+  set({view:"form",focusedIng:0,pendingPhoto:null,current:Object.assign({},e,{ingredients:e.ingredients.map(i=>Object.assign({},i))})});
 }
-function doSave(){
+async function doSave(){
   const c=S.current;if(!c.name.trim())return;
+  if(S.pendingPhoto){
+    try{c.photoUrl=await uploadPhoto(c.id,S.pendingPhoto);}catch(e){alert("❌ Foto-Upload fehlgeschlagen");}
+    S.pendingPhoto=null;
+  }
   const ex=S.entries.find(e=>e.id===c.id);
   S.entries=ex?S.entries.map(e=>e.id===c.id?c:e):[c,...S.entries];
   save(S.entries);set({view:"list"});
