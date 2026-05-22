@@ -360,8 +360,8 @@ function renderList(){
       typG.appendChild(p);
     });
     tagSec.appendChild(typG);
-    // Fleisch
-    const meatLbl=div("tag-group-lbl");meatLbl.textContent="Fleisch";tagSec.appendChild(meatLbl);
+    // Anwendung (Fleisch-Tags)
+    const meatLbl=div("tag-group-lbl");meatLbl.textContent="Anwendung";tagSec.appendChild(meatLbl);
     const meatG=div("tag-group");
     MEATS.forEach(m=>{
       const p=div("tag-pill"+(S.meatFilter.includes(m)?" active":""));p.textContent=m;
@@ -625,9 +625,9 @@ function renderForm(){
   });
   tf.appendChild(tl);tf.appendChild(tg);wrap.appendChild(tf);
 
-  // Fleisch
+  // Anwendung (Fleisch-Tags)
   const mf=div("field");
-  const ml=document.createElement("label");ml.className="lbl";ml.textContent="Fleisch";
+  const ml=document.createElement("label");ml.className="lbl";ml.textContent="Anwendung";
   const mg=div("tag-group");
   MEATS.forEach(m=>{
     const ms=c.meats||[];const isOn=ms.includes(m);
