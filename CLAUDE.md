@@ -239,6 +239,10 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `919f79a — Rename: Fleisch ->
 | 6 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
 | 7 | **Sync-Status-Indikator** | Trivial | Kleines Icon: läuft/fertig/Fehler |
 | 8 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
+| 9 | **Mobile Filter-Layout untereinander** | Klein | Sterne / Typ / Anwendung in drei Zeilen statt einer langen Scroll-Leiste, damit weniger horizontal gescrollt werden muss |
+
+### Offene Überlegungen (nicht entschieden)
+- **Kategorie "Ideen"** als zusätzlicher Status: Überschneidet sich evtl. mit "in Arbeit" — abwägen, ob es einen echten Mehrwert bringt, bevor implementiert wird.
 
 **Empfehlung als nächstes:** `#2 (Duplizieren)` — Trivial-Aufwand mit hohem Nutzen, da das Versions-Iterations-Konzept der Kern der App ist.
 
