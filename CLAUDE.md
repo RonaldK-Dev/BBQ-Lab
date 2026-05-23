@@ -26,8 +26,9 @@
 | **Supabase JS SDK** | v2 (CDN) | DB-Sync (PostgreSQL JSONB) + Storage (Fotos) |
 | **localStorage** | nativ | Offline-Persistenz |
 | **Web Share API** | nativ | `navigator.share()` für Export auf Mobile |
+| **Service Worker** | nativ | Offline-Cache der App-Shell + Supabase-Daten (sw.js) |
 | **Google Fonts** | – | `Bebas Neue` (Headlines), `DM Sans` (Body) |
-| **PWA Manifest** | W3C | Installierbar auf iOS/Android Home-Screen |
+| **PWA Manifest** | W3C | Installierbar auf iOS/Android/Windows Home-Screen |
 | **Python http.server** | 3.x | Lokaler Dev-Server (Port 4321, via `.claude/launch.json`) |
 
 **Keine Dependencies, kein npm, kein Bundler.** Supabase wird via `<script>`-Tag eingebunden.
@@ -35,7 +36,8 @@
 ### Projektstruktur
 ```
 D:\Claude Projekte\BBQ-Lab\
-├── index.html          # KOMPLETTE App: HTML, CSS, JS — 905 Zeilen
+├── index.html          # KOMPLETTE App: HTML, CSS, JS — ~920 Zeilen
+├── sw.js               # Service Worker (Offline-Cache, ~75 Zeilen)
 ├── manifest.json       # PWA Manifest
 ├── icon.png            # 512×512 App-Icon
 ├── favicon.png         # 32×32 Browser-Icon
@@ -110,7 +112,7 @@ Click → Handler → set({...}) → render() leert #root → renderXxx() baut n
 const KEY="bbq-tasting-log";                    // localStorage-Key
 const SUPABASE_URL="https://oltntsahncrrseufbowj.supabase.co";
 const SUPABASE_KEY="sb_publishable_...";        // publishable, kein Secret
-const UNITS=["TL","EL","Cup","g","ml","Prise","–"];
+const UNITS=["TL","EL","Cup","g","ml","L","Prise","–"];
 const FRACS=["¼","½","¾","1","1½","2","3","4"];
 const TYPES=["Rub","Sauce","Marinade","Dip"];
 const MEATS=["Rind","Schwein","Hähnchen","Lamm","Fisch","Gemüse"]; // Reihenfolge fix
@@ -186,6 +188,18 @@ card.style.setProperty("--st-color", SC[e.status]);
 ```
 4px breiter Status-Farbstrich links auf jeder Karte.
 
+#### 16. Service Worker (`sw.js`) für Offline-Support
+Registrierung am Anfang der init-IIFE: `navigator.serviceWorker.register("./sw.js")`.
+Cache-Name: `bbq-lab-v1`. Strategien:
+- **App-Shell** (HTML/Icons/Manifest): Stale-While-Revalidate — App startet **immer instant aus Cache**, Update läuft im Hintergrund. Löst das "Windows-PWA zeigt Offline-Dino"-Problem.
+- **Supabase REST** (`/rest/`): Network-First mit Cache-Fallback — frische Daten online, letzter Stand offline.
+- **Supabase Storage** (`/storage/`): Cache-First — Fotos sind statisch, einmal cachen reicht.
+- **Google Fonts** (CDN): Stale-While-Revalidate.
+
+**Update-Mechanismus:** Bei neuer App-Version wird `CACHE`-Konstante in `sw.js` hochgezählt (`v1` → `v2`). Activate-Handler löscht alte Caches. User sieht neue Version beim nächsten Start.
+
+**Wichtig beim Deploy:** Falls App-Shell-Dateien hinzukommen, müssen sie ins `SHELL`-Array von `sw.js` ergänzt **und** die Cache-Version hochgezählt werden.
+
 ---
 
 ## Aktueller Stand
@@ -200,28 +214,31 @@ card.style.setProperty("--st-color", SC[e.status]);
 - **Filter-Pills** in Sidebar (Desktop) und Mobile-Scroll-Leiste
 - **Sterne-Filter** als klickbarer Sterne-Balken
 - Cloud-Sync via Supabase (Push bei Save, Pull alle 10s + bei Reload)
-- Offline via localStorage
+- Offline via localStorage **und Service Worker** (App-Shell + Daten-Cache)
+- **Service Worker (sw.js)** — installierte PWA startet immer aus Cache, kein Offline-Dino mehr auf Windows/Android
 - Pull-to-Refresh mit `location.reload()`
 - Export via Web Share API (Mobile) / Download (Desktop) — selektiv über Long-Press / Hover-Checkbox
 - Import via JSON-Textarea
-- PWA-installierbar
+- PWA-installierbar (iOS / Android / Windows / Edge / Chrome)
 - Desktop-Layout mit einklappbarer Sidebar + Modals
+- Mobile-Filter (Sterne/Typ/Anwendung) in **drei Zeilen mit Labels oberhalb** (wie Sidebar) — kein horizontales Scrollen
 - Live-Suche in Name/Notizen/Zutaten/anwendung-Legacy
 - "Rezepte"-Klick im Sidebar-Stat resettet **alle** Filter (Status, Typ, Anwendung, Rating)
 - Sortierung Fertig → In Arbeit → Verworfen über alle Views
 - Status-farbiger Card-Stripe
 - Konsistente Stern-Darstellung (★) in Karten, Detail, Sidebar-Schnitt, Form
+- Mengen-Einheit "L" (Liter) verfügbar zusätzlich zu ml
 
 ### In Arbeit
-Aktuell **keine offenen Tasks**. Letzter Commit: `919f79a — Rename: Fleisch -> Anwendung im UI`.
+Aktuell **keine offenen Tasks**. Letzter Commit: `5f60352 — Feature: Service Worker fuer Offline-Support (PWA)`.
 
 ### Bekannte Bugs / Offene Punkte
-- **Kein Service Worker** → erste Page-Load braucht Internet, keine echte Offline-Fähigkeit
 - **Keine User-Auth** → alle Nutzer der Supabase-DB sehen dieselben Rezepte (privates Tool, ok für jetzt)
 - **Datum-Picker auf iOS** je nach Browser unterschiedlich (nativer Picker)
 - **Import-Validierung** prüft nur `Array.isArray()`, keine Schema-Validierung der Entries
 - **Manifest hat nur 512×512-Icon** — Lighthouse mäkelt, funktioniert aber
 - **`anwendung`-Freitextfeld** ist im UI weg, im Schema noch da — kann irgendwann ganz entfernt werden, sobald sicher dass kein Bestand darauf zugreift
+- **SW-Update-Notification** fehlt — neue Version wird beim nächsten Start automatisch geladen, aber User bekommt keinen Hinweis "Update verfügbar"
 
 ---
 
@@ -231,20 +248,23 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `919f79a — Rename: Fleisch ->
 
 | Prio | Feature | Aufwand | Begründung |
 |---|---|---|---|
-| 🥇 #1 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
-| 🥈 #2 | **📋 "Als V.2 duplizieren"** | Trivial | Im Detail-View Button → `openNew()` mit Daten der aktuellen Version + version+1 |
+| 🥇 #1 | **📋 "Als V.2 duplizieren"** | Trivial | Im Detail-View Button → `openNew()` mit Daten der aktuellen Version + version+1 |
+| 🥈 #2 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
 | 🥉 #3 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff |
-| 4 | **🔌 Service Worker** | Klein | Echter Offline-Cache + bessere Update-Kontrolle |
-| 5 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
-| 6 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
-| 7 | **Sync-Status-Indikator** | Trivial | Kleines Icon: läuft/fertig/Fehler |
+| 4 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
+| 5 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
+| 6 | **Sync-Status-Indikator** | Trivial | Kleines Icon im Header: läuft/fertig/Fehler/offline |
+| 7 | **SW-Update-Notification** | Trivial | Toast "Neue Version verfügbar — neu laden" bei wartendem SW |
 | 8 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
-| 9 | **Mobile Filter-Layout untereinander** | Klein | Sterne / Typ / Anwendung in drei Zeilen statt einer langen Scroll-Leiste, damit weniger horizontal gescrollt werden muss |
+
+### Erledigt ✅
+- ~~**🔌 Service Worker**~~ — App-Shell + Daten-Cache (Commit `5f60352`)
+- ~~**Mobile Filter-Layout untereinander**~~ — 3 Zeilen mit Labels oberhalb (Commit `75da228`)
 
 ### Offene Überlegungen (nicht entschieden)
 - **Kategorie "Ideen"** als zusätzlicher Status: Überschneidet sich evtl. mit "in Arbeit" — abwägen, ob es einen echten Mehrwert bringt, bevor implementiert wird.
 
-**Empfehlung als nächstes:** `#2 (Duplizieren)` — Trivial-Aufwand mit hohem Nutzen, da das Versions-Iterations-Konzept der Kern der App ist.
+**Empfehlung als nächstes:** `#1 (Duplizieren)` — Trivial-Aufwand mit hohem Nutzen, da das Versions-Iterations-Konzept der Kern der App ist.
 
 ---
 
@@ -310,10 +330,23 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `919f79a — Rename: Fleisch ->
 | **Actions** | 767–804 | `openNew`, `openEdit`, `doSave` (mit Photo-Upload), `doDownload`, `doExport` (Share Sheet), `doImport` |
 | **`render()`** | 806–846 | Dispatcher, Desktop-Modal-Overlay, Search-Focus-Preservation |
 | **`initPTR()`** | 849–878 | Pull-to-Refresh Touch-Handler (→ `location.reload()`) |
-| **Init-IIFE** | 880–902 | Initial Load, PTR-Register, Mobile-Menü-Outside-Click, 10s-Polling |
+| **Init-IIFE** | ~890–910 | **SW-Registrierung**, Initial Load, PTR-Register, Mobile-Menü-Outside-Click, 10s-Polling |
+
+### `sw.js` (~75 Zeilen) — Service Worker
+Liegt im Repo-Root, wird unter `./sw.js` registriert → Scope = `/BBQ-Lab/` auf GitHub Pages bzw. `/` lokal.
+
+| Bereich | Inhalt |
+|---|---|
+| `CACHE` | Cache-Name `bbq-lab-v1` — **bei Shell-Änderungen hochzählen** |
+| `SHELL` | Pre-Cache-Liste: `./`, `./index.html`, `./manifest.json`, `./icon.png`, `./favicon.png`, `./favicon-16.png` |
+| `install` | `skipWaiting()` — neue Version übernimmt sofort |
+| `activate` | Alte Caches löschen + `clients.claim()` |
+| `fetch` | Router nach URL-Pattern: Supabase REST → Network-First / Supabase Storage → Cache-First / Rest → Stale-While-Revalidate |
+
+**Update-Workflow:** Code-Änderung → optional `CACHE` von `v1` auf `v2` (nur wenn Shell-Datei sich ändert) → push → User reload → neuer SW wartet → next reload aktiviert ihn.
 
 ### `manifest.json`
-PWA-Manifest. `display:"standalone"` für Fullscreen auf iOS. Aktuell nur ein Icon (512×512, `purpose:"any maskable"`).
+PWA-Manifest. `display:"standalone"` für Fullscreen auf iOS/Windows. Aktuell nur ein Icon (512×512, `purpose:"any maskable"`).
 
 ### `icon.png`
 512×512 BBQ-Grill-Logo mit "BBQ"-Schriftzug.
