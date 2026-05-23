@@ -98,6 +98,7 @@
     .action-row{display:flex;gap:10px;margin-top:24px}
     .edit-btn{flex:1;padding:12px;border-radius:10px;background:var(--smoke);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;width:auto}
     .del-btn{padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;cursor:pointer;width:auto}
+    .dup-btn{padding:12px 14px;border-radius:10px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.3);color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;width:auto;white-space:nowrap}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:flex;align-items:flex-end}
     .sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;border-top:1px solid var(--border)}
     .sheet-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);letter-spacing:1px;margin-bottom:12px}
@@ -227,6 +228,7 @@ const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"2.5",d:"2026-05-23",c:"\u201eAls V.X+1 duplizieren\"-Button im Detail-View \u2014 neue Iteration mit Zutaten/Tags/Anwendung \u00fcbernommen, Rating/Notizen/Status zur\u00fcckgesetzt"},
   {v:"2.4",d:"2026-05-23",c:"Service Worker (Offline-Support f\u00fcr installierte PWA) + Mobile-Filter in 3 Zeilen mit Labels oberhalb + Einheit \u201eL\" f\u00fcr Liter"},
   {v:"2.3",d:"2026-05-22",c:"Rename Fleisch \u2192 Anwendung im UI, \u201eRezepte\"-Klick resettet alle Filter, Sortierung Fertig \u2192 In Arbeit \u2192 Verworfen"},
   {v:"2.2",d:"2026-05-22",c:"Tags-System: Typ (Rub/Sauce/Marinade/Dip) + Anwendung (Rind/Schwein/...) + Sterne-Filter, konsistente Stern-Darstellung"},
@@ -782,6 +784,7 @@ function renderDetail(){
 
   const ar=div("action-row");
   ar.appendChild(btn("edit-btn","✏️ Bearbeiten",()=>openEdit(entry)));
+  ar.appendChild(btn("dup-btn","📋 Als V."+nextVersion(entry.version),()=>openDuplicate(entry)));
   ar.appendChild(btn("del-btn","🗑️",async()=>{
     if(!confirm("Eintrag wirklich löschen?")) return;
     const id = entry.id;
@@ -799,6 +802,23 @@ function openNew(){
 }
 function openEdit(e){
   set({view:"form",focusedIng:0,pendingPhoto:null,current:Object.assign({},e,{ingredients:e.ingredients.map(i=>Object.assign({},i))})});
+}
+function nextVersion(v){const n=parseInt(v,10);return String((isNaN(n)?1:n)+1);}
+function openDuplicate(e){
+  set({view:"form",focusedIng:0,pendingPhoto:null,current:{
+    id:Date.now(),
+    name:e.name,
+    version:nextVersion(e.version),
+    date:new Date().toISOString().split("T")[0],
+    rating:0,                                      // neue Version: noch nicht bewertet
+    anwendung:e.anwendung||"",                     // legacy
+    notizen:"",                                    // frische Notizen
+    status:"in Arbeit",                            // neue Iteration startet "in Arbeit"
+    photoUrl:"",                                   // neues Foto erwartet
+    type:e.type||"",
+    meats:[...(e.meats||[])],
+    ingredients:(e.ingredients||[]).map(i=>Object.assign({},i))
+  }});
 }
 async function doSave(){
   const c=S.current;if(!c.name.trim())return;
