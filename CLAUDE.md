@@ -107,7 +107,7 @@ Click → Handler → set({...}) → render() leert #root → renderXxx() baut n
 
 **Wichtig:** Das Feld `anwendung` ist als Freitext **aus dem UI entfernt**, bleibt aber im Schema (für alte Daten) und wird in `matchesSearch()` durchsucht. Neue Rezepte haben `anwendung: ""`.
 
-### Konstanten (Zeilen 215–223)
+### Konstanten (Zeilen 215–223 + VERSIONS-Array)
 ```js
 const KEY="bbq-tasting-log";                    // localStorage-Key
 const SUPABASE_URL="https://oltntsahncrrseufbowj.supabase.co";
@@ -118,6 +118,9 @@ const TYPES=["Rub","Sauce","Marinade","Dip"];
 const MEATS=["Rind","Schwein","Hähnchen","Lamm","Fisch","Gemüse"]; // Reihenfolge fix
 const SC={"in Arbeit":"#f59e0b","fertig":"#10b981","verworfen":"#ef4444"};
 const SI={"in Arbeit":"🔬","fertig":"✅","verworfen":"❌"};
+const VERSIONS=[{v:"2.5",d:"...",c:"..."}, ...]; // Changelog, neueste oben
+                                                 // VERSIONS[0].v erscheint im Sidebar-Footer
+                                                 // Bei neuem Release: Eintrag oben einfügen + SW-CACHE hochzählen
 ```
 
 ### Wichtige Designentscheidungen
@@ -228,9 +231,11 @@ Cache-Name: `bbq-lab-v1`. Strategien:
 - Status-farbiger Card-Stripe
 - Konsistente Stern-Darstellung (★) in Karten, Detail, Sidebar-Schnitt, Form
 - Mengen-Einheit "L" (Liter) verfügbar zusätzlich zu ml
+- **"Als V.X+1 duplizieren"**-Button im Detail-View — neue Iteration mit Zutaten/Tags übernommen, Rating/Notizen/Foto zurückgesetzt
+- **Aktuelle Versionsnummer** im Sidebar-Footer (`BBQ Lab v2.5`) aus `VERSIONS[0].v`
 
 ### In Arbeit
-Aktuell **keine offenen Tasks**. Letzter Commit: `5f60352 — Feature: Service Worker fuer Offline-Support (PWA)`.
+Aktuell **keine offenen Tasks**. Letzter Commit: `ce681bb — Feature: "Als V.X+1 duplizieren"-Button im Detail-View`.
 
 ### Bekannte Bugs / Offene Punkte
 - **Keine User-Auth** → alle Nutzer der Supabase-DB sehen dieselben Rezepte (privates Tool, ok für jetzt)
@@ -248,23 +253,24 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `5f60352 — Feature: Service W
 
 | Prio | Feature | Aufwand | Begründung |
 |---|---|---|---|
-| 🥇 #1 | **📋 "Als V.2 duplizieren"** | Trivial | Im Detail-View Button → `openNew()` mit Daten der aktuellen Version + version+1 |
-| 🥈 #2 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
-| 🥉 #3 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff |
-| 4 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
-| 5 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
-| 6 | **Sync-Status-Indikator** | Trivial | Kleines Icon im Header: läuft/fertig/Fehler/offline |
-| 7 | **SW-Update-Notification** | Trivial | Toast "Neue Version verfügbar — neu laden" bei wartendem SW |
-| 8 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
+| 🥇 #1 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
+| 🥈 #2 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff |
+| 🥉 #3 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
+| 4 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
+| 5 | **Sync-Status-Indikator** | Trivial | Kleines Icon im Header: läuft/fertig/Fehler/offline |
+| 6 | **SW-Update-Notification** | Trivial | Toast "Neue Version verfügbar — neu laden" bei wartendem SW |
+| 7 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
 
 ### Erledigt ✅
+- ~~**📋 "Als V.X+1 duplizieren"**~~ — Detail-View-Button, `openDuplicate()` + `nextVersion()` (Commit `ce681bb`)
+- ~~**Versionsnummer im Sidebar-Footer**~~ — `VERSIONS[0].v` (Commit `1ced7d2`)
 - ~~**🔌 Service Worker**~~ — App-Shell + Daten-Cache (Commit `5f60352`)
 - ~~**Mobile Filter-Layout untereinander**~~ — 3 Zeilen mit Labels oberhalb (Commit `75da228`)
 
 ### Offene Überlegungen (nicht entschieden)
 - **Kategorie "Ideen"** als zusätzlicher Status: Überschneidet sich evtl. mit "in Arbeit" — abwägen, ob es einen echten Mehrwert bringt, bevor implementiert wird.
 
-**Empfehlung als nächstes:** `#1 (Duplizieren)` — Trivial-Aufwand mit hohem Nutzen, da das Versions-Iterations-Konzept der Kern der App ist.
+**Empfehlung als nächstes:** `#1 (Cook-Parameter)` — strukturierte Felder für Temperatur, Garzeit, Holzart, Methode. Würde die App vom reinen Rezept-Log zum echten BBQ-Logbuch upgraden.
 
 ---
 
@@ -327,7 +333,7 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `5f60352 — Feature: Service W
 | **`renderList()`** | 288–538 | Sidebar + Card-Grid + Mobile-Header + Search + Filter-Pills + Long-Press-Handling |
 | **`renderForm()`** | 540–707 | Create/Edit-Form: Name+Version, Foto, Datum, Rating, Status, Typ-Pills, Anwendung-Pills, Zutaten, Notizen |
 | **`renderDetail()`** | 709–765 | Readonly-Detail-View mit Foto, Tags, Sternen, Zutaten-Tabelle, Edit/Delete |
-| **Actions** | 767–804 | `openNew`, `openEdit`, `doSave` (mit Photo-Upload), `doDownload`, `doExport` (Share Sheet), `doImport` |
+| **Actions** | ~795–830 | `openNew`, `openEdit`, **`nextVersion`**, **`openDuplicate`**, `doSave` (mit Photo-Upload), `doDownload`, `doExport` (Share Sheet), `doImport` |
 | **`render()`** | 806–846 | Dispatcher, Desktop-Modal-Overlay, Search-Focus-Preservation |
 | **`initPTR()`** | 849–878 | Pull-to-Refresh Touch-Handler (→ `location.reload()`) |
 | **Init-IIFE** | ~890–910 | **SW-Registrierung**, Initial Load, PTR-Register, Mobile-Menü-Outside-Click, 10s-Polling |
