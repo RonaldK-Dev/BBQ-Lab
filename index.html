@@ -891,6 +891,10 @@ function initPTR(){
 }
 
 (async function init(){
+  // Service Worker registrieren (Offline-Support fuer installierte PWA)
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("./sw.js").catch(e=>console.log("SW reg failed:",e));
+  }
   const cloud = await loadFromSupabase();
   if(cloud && cloud.length > 0){
     S.entries = cloud;
