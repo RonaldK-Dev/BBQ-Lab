@@ -6,17 +6,28 @@
 
 ## Projektübersicht
 
-### Zweck und Ziel
-**BBQ Lab** ist eine deutschsprachige Progressive Web App (PWA) für BBQ-Enthusiasten, die ihre **Gewürzmischungen, Rubs, Marinaden, Saucen und Dips** dokumentieren und über mehrere Versionen iterieren möchten. Jedes Rezept ist ein "Test" mit Zutaten, Versionsnummer, Sterne-Bewertung, Status, optionalem Foto, Typ-/Anwendungs-Tags und Geschmacks-Notizen.
+### Vision & Abgrenzung
+**BBQ Lab ist ein Spice-Lab — kein Cook-Tracker.**
 
-**Hauptanwendungsfälle:**
+Die App dient dem **Entwickeln, Testen und Iterieren von Gewürzmischungen, Rubs, Marinaden, Saucen und Dips**. Der Fokus liegt auf der **Rezeptur selbst** und ihrer **Evolution über mehrere Versionen** ("Smoky Paprika Rub V.1 → V.2 → V.3"). Dieser **iterative Workflow ist der USP der App** — keine andere BBQ-App fokussiert darauf.
+
+**Was BBQ Lab bewusst NICHT ist:**
+- ❌ Kein Live-Cook-Tracker (kein Wetter, kein Smoker-Setup, keine Temperatur-Graphs während des Cooks, keine MEATER-Probe-Integration)
+- ❌ Kein Cook-Session-Logger (anders als PitLog, Smokin Log, Pit Pal)
+- ❌ Keine Konkurrenz zu Pro-Pitmaster-Apps wie Smokin Log
+- ❌ Keine Cook-Parameter (Temperatur/Garzeit/Holzart/Methode) am Rezept — gehört zur Anwendung, nicht zur Mischung
+
+**Wettbewerbsumfeld:** PitLog, Smokin Log, Pit Pal, GrillTime, Green Egg Nation, Smoked! — alle fokussieren auf Cook-Tracking. **Niemand** deckt den "Rezept-Entwicklungs-Workflow" ab. Dort spielt BBQ Lab.
+
+### Hauptanwendungsfälle
 - Neue Gewürzmischung erfassen mit Zutatenliste (Bruchteile ¼, ½, ¾, 1, 1½, 2, 3, 4 als Schnellbuttons)
-- Versionen einer Mischung verfolgen ("Smoky Paprika Rub V.1, V.2 ...")
+- Versionen einer Mischung verfolgen ("Smoky Paprika Rub V.1, V.2 ...") via Duplizieren-Button
+- Geschmacks-Notizen pro Version festhalten ("zu süß, weniger Brown Sugar")
 - Foto pro Rezept (Supabase Storage)
 - Tags: Typ (Rub/Sauce/Marinade/Dip) + Anwendung (Rind/Schwein/Hähnchen/Lamm/Fisch/Gemüse)
 - Status tracken: "in Arbeit", "fertig", "verworfen"
 - Filtern nach Status, Typ, Anwendung, Sterne-Anzahl + Live-Suche
-- Sync zwischen Geräten (Mobile PWA + Desktop)
+- Sync zwischen Geräten (Mobile PWA + Desktop + Windows)
 - Selektiver Export (Long-Press auf Karten → Native Share Sheet)
 
 ### Tech Stack
@@ -253,13 +264,21 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `ce681bb — Feature: "Als V.X+
 
 | Prio | Feature | Aufwand | Begründung |
 |---|---|---|---|
-| 🥇 #1 | **🌡️ Cook-Parameter strukturiert** | Klein-Mittel | Felder für Temperatur, Garzeit, Holzart, Methode statt alles in "Notizen" |
-| 🥈 #2 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, Side-by-Side-Diff |
-| 🥉 #3 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
-| 4 | **📄 PDF/Bild-Export** | Mittel | Eine Karte als druckbares PDF oder Bild für WhatsApp |
-| 5 | **Sync-Status-Indikator** | Trivial | Kleines Icon im Header: läuft/fertig/Fehler/offline |
-| 6 | **SW-Update-Notification** | Trivial | Toast "Neue Version verfügbar — neu laden" bei wartendem SW |
-| 7 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
+| 🥇 #1 | **📊 Versions-Vergleich** | Mittel | Karten gleichen Namens gruppieren, **Side-by-Side V.1 vs V.2 vs V.3 mit Diff-Highlighting** (was hat sich geändert?). **Das ist der USP-Schliff** — keine andere App kann das. |
+| 🥈 #2 | **⚖️ Mengen-Skalierung** | Klein-Mittel | Buttons "×2", "÷2" oder "Für X g Fleisch berechnen" — alle Zutaten-Mengen automatisch umrechnen. Macht aus Lab-Tool ein alltagstaugliches Cook-Companion. |
+| 🥉 #3 | **📄 Druckbare A6-Karte** | Mittel | Rezept als druckbares PDF oder hochauflösendes Bild — zum Aufhängen neben dem Smoker oder Teilen via WhatsApp. |
+| 4 | **⭐ Lieblings-Pin** | Trivial | Stern-Pin über 5★ hinaus, "die mache ich oft". Eigene Filter-Kategorie "Favoriten". |
+| 5 | **⌨️ Keyboard-Shortcuts** | Klein | N=Neu, /=Suche, Esc=Modal-Close, ←/→ im Detail |
+| 6 | **Sync-Status-Indikator** | Trivial | Kleines Icon im Header: läuft/fertig/Fehler/offline |
+| 7 | **SW-Update-Notification** | Trivial | Toast "Neue Version verfügbar — neu laden" bei wartendem SW |
+| 8 | **Sticky Mobile-Suchleiste** | Trivial | `position:sticky` auf `.mobile-search-wrap` |
+
+### Bewusst verworfen (passt nicht zur Vision)
+- ~~**Cook-Parameter strukturiert** (Temperatur, Garzeit, Holzart, Methode)~~ — würde die App in Cook-Tracker-Richtung schieben. Gehört zur Anwendung der Mischung, nicht zur Mischung selbst.
+- ~~**Wetter-Tracking während Cook**~~ — siehe oben
+- ~~**Smoker-Setup/Wood-Felder**~~ — siehe oben
+- ~~**Temperatur-Graph / Cook-Charts**~~ — braucht Hardware-Integration, ist Pro-Pitmaster-Feature
+- ~~**MEATER-Probe-Sync**~~ — falsche Liga, falscher Use-Case
 
 ### Erledigt ✅
 - ~~**📋 "Als V.X+1 duplizieren"**~~ — Detail-View-Button, `openDuplicate()` + `nextVersion()` (Commit `ce681bb`)
@@ -270,7 +289,7 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `ce681bb — Feature: "Als V.X+
 ### Offene Überlegungen (nicht entschieden)
 - **Kategorie "Ideen"** als zusätzlicher Status: Überschneidet sich evtl. mit "in Arbeit" — abwägen, ob es einen echten Mehrwert bringt, bevor implementiert wird.
 
-**Empfehlung als nächstes:** `#1 (Cook-Parameter)` — strukturierte Felder für Temperatur, Garzeit, Holzart, Methode. Würde die App vom reinen Rezept-Log zum echten BBQ-Logbuch upgraden.
+**Empfehlung als nächstes:** `#1 (Versions-Vergleich)` — Side-by-Side-View mit Diff-Highlighting. **Schärft den USP** der App und nutzt das Duplizieren-Feature (v2.5) maximal aus. Wenn User V.1 dupliziert → V.2 baut → fertig → soll er auf einen Blick sehen können "was hab ich geändert und hat's funktioniert?"
 
 ---
 
