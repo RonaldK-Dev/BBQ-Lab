@@ -99,6 +99,28 @@
     .edit-btn{flex:1;padding:12px;border-radius:10px;background:var(--smoke);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:500;cursor:pointer;width:auto}
     .del-btn{padding:12px 16px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:14px;cursor:pointer;width:auto}
     .dup-btn{padding:12px 14px;border-radius:10px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.3);color:var(--accent);font-size:13px;font-weight:500;cursor:pointer;width:auto;white-space:nowrap}
+    /* Auth-Screen */
+    .auth-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:40px 24px;gap:20px;background:linear-gradient(180deg,#161411 0%,var(--bg) 100%)}
+    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+    .auth-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--accent);text-align:center;line-height:1}
+    .auth-sub{font-size:11px;color:var(--muted);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-top:4px;margin-bottom:24px}
+    .auth-title{font-size:16px;color:var(--text);margin-bottom:18px;text-align:center;font-weight:500}
+    .auth-field{margin-bottom:14px}
+    .auth-field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block}
+    .auth-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;line-height:1.4}
+    .auth-info{background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.3);color:var(--accent);padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;line-height:1.4}
+    .auth-submit{width:100%;padding:14px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;margin-top:4px}
+    .auth-submit:disabled{opacity:0.5;cursor:wait}
+    .auth-toggle{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+    .auth-toggle a{color:var(--accent);cursor:pointer;text-decoration:underline}
+    .auth-version{text-align:center;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+    /* User/Logout Footer */
+    .sidebar-user{font-size:10px;color:var(--text);margin-top:10px;text-align:center;word-break:break-all;padding:0 4px}
+    .sidebar-user-admin{color:var(--accent);font-weight:600}
+    .sidebar-logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;padding:5px 12px;border-radius:6px;margin-top:8px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:color 0.15s,border-color 0.15s}
+    .sidebar-logout-btn:hover{color:#ef4444;border-color:#ef4444}
+    .sidebar-admin-link{display:block;font-size:10px;color:var(--accent);margin-top:10px;text-decoration:none;text-align:center;padding:6px;border:1px dashed rgba(232,160,32,0.4);border-radius:6px;letter-spacing:0.5px}
+    .sidebar-admin-link:hover{background:rgba(232,160,32,0.08)}
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;display:flex;align-items:flex-end}
     .sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;border-top:1px solid var(--border)}
     .sheet-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);letter-spacing:1px;margin-bottom:12px}
@@ -219,6 +241,8 @@
 const KEY="bbq-tasting-log";
 const SUPABASE_URL="https://oltntsahncrrseufbowj.supabase.co";
 const SUPABASE_KEY="sb_publishable_Wz9U4K2Sb6ooyKWLvIb1oQ_0KT2qKYy";
+const SUPABASE_PROJECT_ID="oltntsahncrrseufbowj";
+const ADMIN_EMAIL="BBQ-Lab@outlook.at"; // Master/Admin-Account, identifiziert per Email
 const UNITS=["TL","EL","Cup","g","ml","L","Prise","\u2013"];
 const FRACS=["\u00bc","\u00bd","\u00be","1","1\u00bd","2","3","4"];
 const TYPES=["Rub","Sauce","Marinade","Dip"];
@@ -228,6 +252,7 @@ const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"3.0",d:"2026-05-27",c:"Multi-User: Login/Registrierung via Email+Passwort. Jeder User hat seine eigenen Rezepte. Admin-Bereich (Supabase Dashboard-Link). Foto-Uploads in User-Ordner."},
   {v:"2.6",d:"2026-05-27",c:"Sterne im Detail-View direkt klickbar (ohne Edit-Modus) + besseres Foto-Upload Error-Logging zur Bug-Diagnose"},
   {v:"2.5",d:"2026-05-23",c:"\u201eAls V.X+1 duplizieren\"-Button im Detail-View \u2014 neue Iteration mit Zutaten/Tags/Anwendung \u00fcbernommen, Rating/Notizen/Status zur\u00fcckgesetzt"},
   {v:"2.4",d:"2026-05-23",c:"Service Worker (Offline-Support f\u00fcr installierte PWA) + Mobile-Filter in 3 Zeilen mit Labels oberhalb + Einheit \u201eL\" f\u00fcr Liter"},
@@ -254,31 +279,123 @@ function getSB(){
 }
 
 async function syncToSupabase(entries){
+  if(!S.session)return; // nicht eingeloggt -> kein Sync
   try{
     const db = getSB();
+    const uid = S.session.user.id;
     for(const entry of entries){
-      await db.from("entries").upsert({id:entry.id, data:entry, updated_at: new Date().toISOString()});
+      await db.from("entries").upsert({id:entry.id, data:entry, user_id:uid, updated_at: new Date().toISOString()});
     }
-    console.log("Sync OK:", entries.length, "entries");
-  }catch(e){console.log("Sync error:",e);}
+    console.log("Sync OK:", entries.length, "entries (user:",S.session.user.email,")");
+  }catch(e){console.error("Sync error:",e);}
 }
 
 async function loadFromSupabase(){
+  if(!S.session)return null;
   try{
     const db = getSB();
-    const {data, error} = await db.from("entries").select("*").order("updated_at", {ascending:false});
+    const uid = S.session.user.id;
+    const {data, error} = await db.from("entries").select("*").eq("user_id", uid).order("updated_at", {ascending:false});
     if(error) throw error;
-    if(data && data.length > 0){
+    if(data){
       const entries = data.map(r => r.data);
       localStorage.setItem(KEY, JSON.stringify(entries));
       return entries;
     }
-  }catch(e){console.log("Load error:",e);}
+  }catch(e){console.error("Load error:",e);}
   return null;
 }
+
+// --- Auth ---
+async function doSignIn(){
+  const em=(S.authEmail||"").trim();const pw=S.authPass||"";
+  if(!em||!pw){set({authError:"Email und Passwort eingeben"});return;}
+  set({authLoading:true,authError:null});
+  try{
+    const db=getSB();
+    const {data,error}=await db.auth.signInWithPassword({email:em,password:pw});
+    if(error)throw error;
+    S.session=data.session;S.authPass="";S.authEmail="";
+    const cloud=await loadFromSupabase();
+    S.entries=cloud||[];
+    set({view:"list",authLoading:false,authError:null,authMode:"login"});
+  }catch(e){
+    console.error("SignIn-Fehler:",e);
+    set({authLoading:false,authError:e?.message||"Login fehlgeschlagen"});
+  }
+}
+async function doSignUp(){
+  const em=(S.authEmail||"").trim();const pw=S.authPass||"";
+  if(!em||!pw){set({authError:"Email und Passwort eingeben"});return;}
+  if(pw.length<6){set({authError:"Passwort min. 6 Zeichen"});return;}
+  set({authLoading:true,authError:null});
+  try{
+    const db=getSB();
+    const {data,error}=await db.auth.signUp({email:em,password:pw});
+    if(error)throw error;
+    if(data.session){
+      S.session=data.session;S.authPass="";S.authEmail="";
+      const cloud=await loadFromSupabase();
+      S.entries=cloud||[];
+      set({view:"list",authLoading:false,authError:null,authMode:"login"});
+    }else{
+      set({authLoading:false,authInfo:"Account erstellt! Bitte einloggen.",authMode:"login",authPass:""});
+    }
+  }catch(e){
+    console.error("SignUp-Fehler:",e);
+    set({authLoading:false,authError:e?.message||"Registrierung fehlgeschlagen"});
+  }
+}
+async function doSignOut(){
+  try{await getSB().auth.signOut();}catch(e){console.error("SignOut:",e);}
+  S.session=null;S.entries=[];
+  localStorage.removeItem(KEY);
+  set({view:"auth",authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,menuOpen:false,sidebarMenuOpen:false,detailId:null,current:null});
+}
+function isAdmin(){return S.session?.user?.email?.toLowerCase()===ADMIN_EMAIL.toLowerCase();}
+
+function renderAuth(){
+  const wrap=div("auth-wrap");
+  const card=div("auth-card");
+  const logo=div("auth-logo");logo.textContent="BBQ LAB";card.appendChild(logo);
+  const sub=div("auth-sub");sub.textContent="Gewürz Tasting Log";card.appendChild(sub);
+  const isReg=S.authMode==="register";
+  const title=div("auth-title");title.textContent=isReg?"Account erstellen":"Einloggen";card.appendChild(title);
+  if(S.authError){const err=div("auth-error");err.textContent="❌ "+S.authError;card.appendChild(err);}
+  if(S.authInfo){const inf=div("auth-info");inf.textContent="✅ "+S.authInfo;card.appendChild(inf);}
+  // Email
+  const ef=div("auth-field");
+  const el=document.createElement("label");el.textContent="Email";
+  const ei=document.createElement("input");ei.type="email";ei.value=S.authEmail||"";ei.placeholder="email@example.com";ei.autocomplete="email";ei.autofocus=true;
+  ei.addEventListener("input",e=>{S.authEmail=e.target.value;});
+  ef.appendChild(el);ef.appendChild(ei);card.appendChild(ef);
+  // Password
+  const pf=div("auth-field");
+  const pl=document.createElement("label");pl.textContent="Passwort"+(isReg?" (min. 6 Zeichen)":"");
+  const pi=document.createElement("input");pi.type="password";pi.value=S.authPass||"";pi.placeholder="••••••••";pi.autocomplete=isReg?"new-password":"current-password";
+  pi.addEventListener("input",e=>{S.authPass=e.target.value;});
+  pi.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();isReg?doSignUp():doSignIn();}});
+  pf.appendChild(pl);pf.appendChild(pi);card.appendChild(pf);
+  // Submit
+  const sub2=document.createElement("button");
+  sub2.className="auth-submit";sub2.textContent=S.authLoading?"BITTE WARTEN...":(isReg?"REGISTRIEREN":"EINLOGGEN");
+  sub2.disabled=!!S.authLoading;
+  sub2.addEventListener("click",isReg?doSignUp:doSignIn);
+  card.appendChild(sub2);
+  // Toggle
+  const tg=div("auth-toggle");
+  const txt=document.createTextNode(isReg?"Schon Account? ":"Neu hier? ");
+  const a=document.createElement("a");a.textContent=isReg?"Einloggen":"Account erstellen";
+  a.addEventListener("click",()=>set({authMode:isReg?"login":"register",authError:null,authInfo:null,authPass:""}));
+  tg.appendChild(txt);tg.appendChild(a);card.appendChild(tg);
+  wrap.appendChild(card);
+  const ver=div("auth-version");ver.textContent="BBQ Lab v"+VERSIONS[0].v;wrap.appendChild(ver);
+  return wrap;
+}
 async function uploadPhoto(entryId,file){
+  if(!S.session)throw new Error("Nicht eingeloggt");
   const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
-  const path=entryId+"."+ext;
+  const path=S.session.user.id+"/"+entryId+"."+ext; // User-Ordner
   console.log("uploadPhoto: starte Upload",{path,size:file.size,type:file.type});
   const db=getSB();
   const {data,error}=await db.storage.from("recipe-photos").upload(path,file,{upsert:true,contentType:file.type||"image/jpeg"});
@@ -303,7 +420,7 @@ function inp(cls,val,cb,extra){
 function txt(cls,text){const e=document.createElement("p");e.className=cls;e.textContent=text;return e;}
 function span(text){return document.createTextNode(text);}
 
-let S={view:"list",entries:load(),current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null};
+let S={view:"list",entries:[],current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null,session:null,authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,authLoading:false};
 let _lpTimer=null;
 function set(p){S=Object.assign({},S,p);render();}
 
@@ -397,6 +514,22 @@ function renderList(){
     const foot=div("sidebar-footer");
     const footTitle=div("sidebar-footer-title");footTitle.textContent="BBQ Lab v"+VERSIONS[0].v;
     foot.appendChild(footTitle);
+    if(S.session){
+      const ue=document.createElement("div");ue.className="sidebar-user"+(isAdmin()?" sidebar-user-admin":"");
+      ue.textContent=(isAdmin()?"🔧 ":"")+S.session.user.email;
+      foot.appendChild(ue);
+      if(isAdmin()){
+        const adminLink=document.createElement("a");
+        adminLink.className="sidebar-admin-link";
+        adminLink.href="https://supabase.com/dashboard/project/"+SUPABASE_PROJECT_ID+"/auth/users";
+        adminLink.target="_blank";adminLink.rel="noopener";
+        adminLink.textContent="👥 Benutzerverwaltung";
+        foot.appendChild(adminLink);
+      }
+      const lo=document.createElement("button");lo.className="sidebar-logout-btn";lo.textContent="Abmelden";
+      lo.addEventListener("click",doSignOut);
+      foot.appendChild(lo);
+    }
     sb.appendChild(foot);
   }
   wrap.appendChild(sb);
@@ -443,7 +576,18 @@ function renderList(){
     const dd=div("dropdown");
     const ex=div("dropdown-item");ex.textContent="\ud83d\udce4 Exportieren";ex.addEventListener("click",doExport);
     const im=div("dropdown-item");im.textContent="\ud83d\udce5 Importieren";im.addEventListener("click",()=>set({importOpen:true,menuOpen:false}));
-    dd.appendChild(ex);dd.appendChild(im);mwrap.appendChild(dd);
+    dd.appendChild(ex);dd.appendChild(im);
+    if(S.session){
+      if(isAdmin()){
+        const ad=div("dropdown-item");ad.textContent="\ud83d\udd27 Admin / Supabase";
+        ad.addEventListener("click",()=>{window.open("https://supabase.com/dashboard/project/"+SUPABASE_PROJECT_ID+"/auth/users","_blank");set({menuOpen:false});});
+        dd.appendChild(ad);
+      }
+      const lo=div("dropdown-item");lo.textContent="\ud83d\udeaa Abmelden ("+S.session.user.email+")";
+      lo.style.fontSize="12px";lo.addEventListener("click",doSignOut);
+      dd.appendChild(lo);
+    }
+    mwrap.appendChild(dd);
   }
   right.appendChild(badge);right.appendChild(mwrap);
   top.appendChild(logo);top.appendChild(right);
@@ -887,6 +1031,10 @@ function render(){
   const searchPos=searchFocused?focused.selectionEnd:null;
   r.innerHTML="";
   const isDesktop=window.innerWidth>=768;
+  if(S.view==="auth"){
+    r.appendChild(renderAuth());
+    return;
+  }
   if(S.view==="list"){
     r.appendChild(renderList());
   }else if(S.view==="form"){
@@ -959,14 +1107,31 @@ function initPTR(){
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("./sw.js").catch(e=>console.log("SW reg failed:",e));
   }
-  const cloud = await loadFromSupabase();
-  if(cloud && cloud.length > 0){
-    S.entries = cloud;
-  } else {
-    S.entries = load();
+  // Session aus Supabase laden (SDK persistiert in localStorage automatisch)
+  const db=getSB();
+  try{
+    const {data:{session}}=await db.auth.getSession();
+    S.session=session||null;
+  }catch(e){console.error("getSession-Fehler:",e);S.session=null;}
+
+  if(S.session){
+    const cloud=await loadFromSupabase();
+    S.entries=cloud||load();
+    S.view="list";
+  }else{
+    S.view="auth";S.authMode="login";S.entries=[];
   }
   render();
   initPTR();
+
+  // Auth State Listener — z.B. bei automatischem Logout durch abgelaufenes Token
+  db.auth.onAuthStateChange((event,session)=>{
+    if(event==="SIGNED_OUT"&&S.view!=="auth"){
+      S.session=null;S.entries=[];
+      set({view:"auth",authMode:"login"});
+    }
+  });
+
   document.addEventListener("click",(e)=>{
     if(!S.menuOpen)return;
     const wrap=document.querySelector(".menu-wrap");
@@ -974,8 +1139,9 @@ function initPTR(){
     set({menuOpen:false});
   });
   setInterval(async()=>{
+    if(!S.session)return;
     const cloud=await loadFromSupabase();
-    if(cloud&&cloud.length>0&&JSON.stringify(cloud)!==JSON.stringify(S.entries)){
+    if(cloud&&JSON.stringify(cloud)!==JSON.stringify(S.entries)){
       S.entries=cloud;
       if(S.view==="list") render();
     }
