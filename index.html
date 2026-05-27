@@ -366,16 +366,26 @@ function renderAuth(){
   // Email
   const ef=div("auth-field");
   const el=document.createElement("label");el.textContent="Email";
-  const ei=document.createElement("input");ei.type="email";ei.value=S.authEmail||"";ei.placeholder="email@example.com";ei.autocomplete="email";ei.autofocus=true;
+  const ei=document.createElement("input");ei.type="email";ei.value=S.authEmail||"";ei.placeholder="email@example.com";
+  ei.setAttribute("autocomplete","off");ei.setAttribute("data-lpignore","true");ei.setAttribute("autocorrect","off");ei.setAttribute("autocapitalize","off");ei.spellcheck=false;
   ei.addEventListener("input",e=>{S.authEmail=e.target.value;});
   ef.appendChild(el);ef.appendChild(ei);card.appendChild(ef);
   // Password
   const pf=div("auth-field");
   const pl=document.createElement("label");pl.textContent="Passwort"+(isReg?" (min. 6 Zeichen)":"");
-  const pi=document.createElement("input");pi.type="password";pi.value=S.authPass||"";pi.placeholder="••••••••";pi.autocomplete=isReg?"new-password":"current-password";
+  const pi=document.createElement("input");pi.type="password";pi.value=S.authPass||"";pi.placeholder="••••••••";
+  pi.setAttribute("autocomplete","new-password");pi.setAttribute("data-lpignore","true");
   pi.addEventListener("input",e=>{S.authPass=e.target.value;});
   pi.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();isReg?doSignUp():doSignIn();}});
   pf.appendChild(pl);pf.appendChild(pi);card.appendChild(pf);
+  // Browser-Autofill nach Render explizit zuruecksetzen, wenn State leer (Logout-Fall)
+  if(!S.authEmail&&!S.authPass){
+    setTimeout(()=>{
+      try{ei.value="";pi.value="";ei.focus();}catch(e){}
+    },100);
+  }else{
+    setTimeout(()=>{try{ei.focus();}catch(e){}},50);
+  }
   // Submit
   const sub2=document.createElement("button");
   sub2.className="auth-submit";sub2.textContent=S.authLoading?"BITTE WARTEN...":(isReg?"REGISTRIEREN":"EINLOGGEN");
