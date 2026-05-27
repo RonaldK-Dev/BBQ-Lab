@@ -228,6 +228,7 @@ const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"2.6",d:"2026-05-27",c:"Sterne im Detail-View direkt klickbar (ohne Edit-Modus) + besseres Foto-Upload Error-Logging zur Bug-Diagnose"},
   {v:"2.5",d:"2026-05-23",c:"\u201eAls V.X+1 duplizieren\"-Button im Detail-View \u2014 neue Iteration mit Zutaten/Tags/Anwendung \u00fcbernommen, Rating/Notizen/Status zur\u00fcckgesetzt"},
   {v:"2.4",d:"2026-05-23",c:"Service Worker (Offline-Support f\u00fcr installierte PWA) + Mobile-Filter in 3 Zeilen mit Labels oberhalb + Einheit \u201eL\" f\u00fcr Liter"},
   {v:"2.3",d:"2026-05-22",c:"Rename Fleisch \u2192 Anwendung im UI, \u201eRezepte\"-Klick resettet alle Filter, Sortierung Fertig \u2192 In Arbeit \u2192 Verworfen"},
@@ -276,12 +277,15 @@ async function loadFromSupabase(){
   return null;
 }
 async function uploadPhoto(entryId,file){
-  const ext=file.name.split(".").pop()||"jpg";
+  const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
   const path=entryId+"."+ext;
+  console.log("uploadPhoto: starte Upload",{path,size:file.size,type:file.type});
   const db=getSB();
-  const {data,error}=await db.storage.from("recipe-photos").upload(path,file,{upsert:true});
-  if(error)throw error;
-  return db.storage.from("recipe-photos").getPublicUrl(path).data.publicUrl;
+  const {data,error}=await db.storage.from("recipe-photos").upload(path,file,{upsert:true,contentType:file.type||"image/jpeg"});
+  if(error){console.error("uploadPhoto: Supabase-Fehler",error);throw error;}
+  const url=db.storage.from("recipe-photos").getPublicUrl(path).data.publicUrl;
+  console.log("uploadPhoto: OK",url);
+  return url;
 }
 function stars(r){return[1,2,3,4,5].map(s=>s<=r?"\u2b50":"\u2606").join("");}
 function matchesSearch(e,q){if(!q)return true;const t=q.toLowerCase();const hay=(e.name+" "+(e.anwendung||"")+" "+(e.notizen||"")+" "+(e.ingredients||[]).map(i=>i.name||"").join(" ")).toLowerCase();return hay.includes(t);}
@@ -748,7 +752,25 @@ function renderDetail(){
   const di=div("detail-info");
   const dn=div("detail-name");dn.textContent=entry.name+(entry.version?" V."+entry.version:"");
   const dm=div("detail-meta");dm.textContent=entry.date;
-  const ds=div("detail-stars");[1,2,3,4,5].forEach(n=>{const s=document.createElement("span");s.textContent="★";s.style.color=n<=entry.rating?"var(--accent)":"var(--muted)";ds.appendChild(s);});
+  const ds=div("detail-stars");
+  [1,2,3,4,5].forEach(n=>{
+    const s=document.createElement("span");s.textContent="★";
+    s.style.cssText="cursor:pointer;color:"+(n<=entry.rating?"var(--accent)":"var(--muted)")+";transition:color 0.15s,transform 0.1s;-webkit-user-select:none;user-select:none;padding:0 2px";
+    s.title="Bewertung auf "+n+" Sterne setzen";
+    s.addEventListener("click",()=>{
+      const newRating=entry.rating===n?0:n; // nochmal auf gleichen Stern → reset auf 0
+      entry.rating=newRating;
+      S.entries=S.entries.map(x=>x.id===entry.id?entry:x);
+      // DOM-Update ohne Re-Render (kein Flicker)
+      [...ds.children].forEach((star,i)=>{star.style.color=(i+1)<=newRating?"var(--accent)":"var(--muted)";});
+      // Klick-Animation
+      s.style.transform="scale(1.3)";
+      setTimeout(()=>{s.style.transform="scale(1)";},120);
+      // Persistieren (localStorage + Supabase async)
+      save(S.entries);
+    });
+    ds.appendChild(s);
+  });
   const pill=div("status-pill");
   pill.textContent=SI[entry.status]+" "+entry.status;
   pill.style.cssText="display:inline-block;background:"+SC[entry.status]+"22;color:"+SC[entry.status]+";border:1px solid "+SC[entry.status]+"44;font-size:12px;padding:3px 10px;border-radius:20px";
@@ -823,7 +845,12 @@ function openDuplicate(e){
 async function doSave(){
   const c=S.current;if(!c.name.trim())return;
   if(S.pendingPhoto){
-    try{c.photoUrl=await uploadPhoto(c.id,S.pendingPhoto);}catch(e){alert("❌ Foto-Upload fehlgeschlagen");}
+    try{c.photoUrl=await uploadPhoto(c.id,S.pendingPhoto);}
+    catch(e){
+      console.error("Foto-Upload-Fehler:",e,{message:e?.message,status:e?.statusCode||e?.status,name:e?.name,error:e?.error});
+      const msg=e?.message||e?.error||"Unbekannter Fehler";
+      alert("❌ Foto-Upload fehlgeschlagen:\n\n"+msg+"\n\nDetails in der Browser-Console (F12).");
+    }
     S.pendingPhoto=null;
   }
   const ex=S.entries.find(e=>e.id===c.id);
