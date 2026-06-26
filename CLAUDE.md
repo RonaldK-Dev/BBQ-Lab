@@ -537,3 +537,15 @@ Im Code hardcoded:
 - **Workflow:** User testet im Browser-Preview, gibt direktes visuelles Feedback ("verrückt sich nach rechts", "der Stern ist zu klein"). Auf gezielte Eval-Tests + Fix reagieren, nicht theoretische Analyse.
 - **Mobile-Anwendung:** User hat die PWA via Safari → "Zum Home-Bildschirm" installiert. Bei größeren UI-Änderungen ggf. App neu installieren empfehlen.
 - **Antworten kurz halten.** User mag knappe, ergebnis-orientierte Antworten.
+- **Antworten per Klick bevorzugen:** Entscheidungen/Rückfragen als Auswahloptionen anbieten, nicht als Fragen die Ronald eintippen muss.
+
+## Second Brain (Obsidian Vault)
+
+Ronald führt ein Obsidian-Vault als persönliches Wissenssystem:
+- **Pfad:** `D:\second-brain\second-brain\`
+- **Projektdatei BBQ Lab:** `D:\second-brain\second-brain\02 Projekte\Gewürze App.md`
+- **Ressourcen KI & Claude:** `D:\second-brain\second-brain\04 Ressourcen\KI & Claude\KI & Claude.md`
+
+Wenn in einer Session wichtige Erkenntnisse, Entscheidungen oder technische Learnings entstehen, diese am Session-Ende in die passende Vault-Datei schreiben — insbesondere technische Erkenntnisse nach `KI & Claude.md` und Projekt-Updates nach `Gewürze App.md`.
+
+**Trigger:** Wenn Ronald sagt **„Session beenden"** oder **„ins Second Brain speichern"** → Erkenntnisse der Session zusammenfassen und in die passenden Vault-Dateien schreiben, dann kurz bestätigen was gespeichert wurde.
