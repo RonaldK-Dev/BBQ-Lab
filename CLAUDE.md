@@ -50,7 +50,7 @@ Die App dient dem **Entwickeln, Testen und Iterieren von Gewürzmischungen, Rubs
 
 ### Projektstruktur
 ```
-D:\Claude Projekte\BBQ-Lab\
+D:\second-brain\Projekte\BBQ-Lab\
 ├── index.html          # KOMPLETTE App: HTML, CSS, JS — ~1050 Zeilen
 ├── sw.js               # Service Worker (Offline-Cache, ~75 Zeilen)
 ├── manifest.json       # PWA Manifest
@@ -443,7 +443,7 @@ PWA-Manifest. `display:"standalone"` für Fullscreen auf iOS/Windows. Aktuell nu
 512×512 BBQ-Grill-Logo mit "BBQ"-Schriftzug.
 
 ### `.claude/launch.json`
-Dev-Server für Preview-MCP (Port 4321, Python http.server). **Liegt in `D:\Claude Projekte\.claude\`** (Projekt-Root ist `D:\Claude Projekte\`, nicht das BBQ-Lab-Subverzeichnis).
+Dev-Server für Preview-MCP (Port 4321, Python http.server). **Liegt in `D:\second-brain\Projekte\.claude\`** (Projekt-Root ist `D:\second-brain\Projekte\`, nicht das BBQ-Lab-Subverzeichnis).
 
 ### `.gitignore`
 Ignoriert nur `.claude/`.
@@ -548,4 +548,4 @@ Ronald führt ein Obsidian-Vault als persönliches Wissenssystem:
 
 Wenn in einer Session wichtige Erkenntnisse, Entscheidungen oder technische Learnings entstehen, diese am Session-Ende in die passende Vault-Datei schreiben — insbesondere technische Erkenntnisse nach `KI & Claude.md` und Projekt-Updates nach `Gewürze App.md`.
 
-**Trigger:** Wenn Ronald sagt **„Session beenden"** oder **„ins Second Brain speichern"** → Erkenntnisse der Session zusammenfassen und in die passenden Vault-Dateien schreiben, dann kurz bestätigen was gespeichert wurde.
+**Trigger:** Wenn Ronald sagt **„Session beenden"** oder **„ins Second Brain speichern"** → Erkenntnisse der Session zusammenfassen und in die passenden Vault-Dateien schreiben, dann kurz bestätigen was g
