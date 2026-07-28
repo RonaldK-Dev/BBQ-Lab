@@ -548,4 +548,4 @@ Ronald führt ein Obsidian-Vault als persönliches Wissenssystem:
 
 Wenn in einer Session wichtige Erkenntnisse, Entscheidungen oder technische Learnings entstehen, diese am Session-Ende in die passende Vault-Datei schreiben — insbesondere technische Erkenntnisse nach `KI & Claude.md` und Projekt-Updates nach `Gewürze App.md`.
 
-**Trigger:** Wenn Ronald sagt **„Session beenden"** oder **„ins Second Brain speichern"** → Erkenntnisse der Session zusammenfassen und in die passenden Vault-Dateien schreiben, dann kurz bestätigen was g
+**Trigger:** Wenn Ronald sagt **„Session beenden"** oder **„ins Second Brain speichern"** → Erkenntnisse der Session zusammenfassen und in die passenden Vault-Dateien schreiben, dann kurz bestätigen was gespeichert wurde.

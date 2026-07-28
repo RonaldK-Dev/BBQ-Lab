@@ -252,6 +252,7 @@ const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"3.0.1",d:"2026-07-28",c:"Fix: Login-Email jetzt case-insensitive (BBQ-Lab@... und bbq-lab@... funktionieren beide) + GitHub Action (Keep-Alive) verhindert Supabase-Auto-Pausen"},
   {v:"3.0",d:"2026-05-27",c:"Multi-User: Login/Registrierung via Email+Passwort. Jeder User hat seine eigenen Rezepte. Admin-Bereich (Supabase Dashboard-Link). Foto-Uploads in User-Ordner."},
   {v:"2.6",d:"2026-05-27",c:"Sterne im Detail-View direkt klickbar (ohne Edit-Modus) + besseres Foto-Upload Error-Logging zur Bug-Diagnose"},
   {v:"2.5",d:"2026-05-23",c:"\u201eAls V.X+1 duplizieren\"-Button im Detail-View \u2014 neue Iteration mit Zutaten/Tags/Anwendung \u00fcbernommen, Rating/Notizen/Status zur\u00fcckgesetzt"},
@@ -308,7 +309,7 @@ async function loadFromSupabase(){
 
 // --- Auth ---
 async function doSignIn(){
-  const em=(S.authEmail||"").trim();const pw=S.authPass||"";
+  const em=(S.authEmail||"").trim().toLowerCase();const pw=S.authPass||"";
   if(!em||!pw){set({authError:"Email und Passwort eingeben"});return;}
   set({authLoading:true,authError:null});
   try{
@@ -325,7 +326,7 @@ async function doSignIn(){
   }
 }
 async function doSignUp(){
-  const em=(S.authEmail||"").trim();const pw=S.authPass||"";
+  const em=(S.authEmail||"").trim().toLowerCase();const pw=S.authPass||"";
   if(!em||!pw){set({authError:"Email und Passwort eingeben"});return;}
   if(pw.length<6){set({authError:"Passwort min. 6 Zeichen"});return;}
   set({authLoading:true,authError:null});
