@@ -308,6 +308,7 @@ Aktuell **keine offenen Tasks**. Letzter Commit: `af4d3d1 — Feature v3.0: Mult
 - **SW-Update-Notification** fehlt — neue Version wird beim nächsten Start automatisch geladen, aber User bekommt keinen Hinweis "Update verfügbar"
 - **Passwort-Reset-UI** fehlt — User muss vergessenes Passwort über Admin im Supabase Dashboard reset bekommen, oder wir bauen v3.1 Passwort-Reset-Flow
 - **Email-Verifizierung** ist deaktiviert (Confirm Email OFF) — User kann mit nicht existierenden Emails registrieren. Für privates Tool ok
+- **Offene Security-Punkte (Review 2026-07-29, nicht kritisch):** Bucket-Listing öffentlich (SELECT auf `storage.objects` listet alle Dateinamen inkl. User-UUIDs); Sharing-Policy schon scharf obwohl Feature ungebaut (bei v3.1 Tokens kryptographisch zufällig erzeugen); Leaked-Password-Protection im Dashboard aus; supabase-js vom CDN ohne Version-Pin/SRI; SW-Cache überlebt Logout (Rezeptdaten auf geteiltem Gerät lesbar); Client-Delete ohne `user_id`-Filter
 
 ---
 
@@ -471,6 +472,8 @@ CREATE POLICY "users update own entries" ON entries FOR UPDATE USING (auth.uid()
 CREATE POLICY "users delete own entries" ON entries FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "anyone can read shared entries" ON entries FOR SELECT USING (share_token IS NOT NULL);
 ```
+
+⚠️ **Sicherheits-Fix 2026-07-29 (Migration `drop_legacy_anon_policies`):** Es lagen noch `anon_select/insert/update/delete`-Policies mit `USING (true)` aus der Vor-Auth-Zeit auf `entries`, plus `allow_insert`/`allow_update` für `anon` auf `storage.objects`. **RLS-Policies sind ODER-verknüpft** — die alten `true`-Policies hoben die User-Isolation komplett auf (anonymer Vollzugriff mit dem publishable Key). Alle 6 gedroppt. **Regel für künftige Auth-/RLS-Änderungen:** neue Policies hinzufügen reicht nicht, alte immer explizit droppen; danach `get_advisors(type:"security")` + anonymen REST-Call zur Gegenprobe.
 
 ### Storage-Bucket `recipe-photos` (v3.0)
 - **Public Bucket** (read für jeden — Bilder werden im Frontend gerendert)
