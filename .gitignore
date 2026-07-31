@@ -1,1 +1,6 @@
 .claude/
+
+# Interne Projektnotizen fuer Claude-Sessions.
+# Enthaelt Admin-Kennungen und offene Sicherheitspunkte - gehoert nicht ins
+# oeffentliche Repo. Bleibt lokal erhalten.
+CLAUDE.md
