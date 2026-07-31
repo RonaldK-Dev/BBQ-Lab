@@ -243,6 +243,7 @@ const SUPABASE_URL="https://oltntsahncrrseufbowj.supabase.co";
 const SUPABASE_KEY="sb_publishable_Wz9U4K2Sb6ooyKWLvIb1oQ_0KT2qKYy";
 const SUPABASE_PROJECT_ID="oltntsahncrrseufbowj";
 const ADMIN_EMAIL="BBQ-Lab@outlook.at"; // Master/Admin-Account, identifiziert per Email
+const SIGNUP_OPEN=false; // muss zum Supabase-Schalter "Allow new users to sign up" passen
 const UNITS=["TL","EL","Cup","g","ml","L","Prise","\u2013"];
 const FRACS=["\u00bc","\u00bd","\u00be","1","1\u00bd","2","3","4"];
 const TYPES=["Rub","Sauce","Marinade","Dip"];
@@ -395,10 +396,15 @@ function renderAuth(){
   card.appendChild(sub2);
   // Toggle
   const tg=div("auth-toggle");
-  const txt=document.createTextNode(isReg?"Schon Account? ":"Neu hier? ");
-  const a=document.createElement("a");a.textContent=isReg?"Einloggen":"Account erstellen";
-  a.addEventListener("click",()=>set({authMode:isReg?"login":"register",authError:null,authInfo:null,authPass:""}));
-  tg.appendChild(txt);tg.appendChild(a);card.appendChild(tg);
+  if(SIGNUP_OPEN||isReg){
+    const txt=document.createTextNode(isReg?"Schon Account? ":"Neu hier? ");
+    const a=document.createElement("a");a.textContent=isReg?"Einloggen":"Account erstellen";
+    a.addEventListener("click",()=>set({authMode:isReg?"login":"register",authError:null,authInfo:null,authPass:""}));
+    tg.appendChild(txt);tg.appendChild(a);
+  }else{
+    tg.textContent="Zugang erhältst du vom BBQ Lab Administrator.";
+  }
+  card.appendChild(tg);
   wrap.appendChild(card);
   const ver=div("auth-version");ver.textContent="BBQ Lab v"+VERSIONS[0].v;wrap.appendChild(ver);
   return wrap;
@@ -456,7 +462,7 @@ function renderList(){
   sb.appendChild(sbTop);
   if(S.sidebarMenuOpen){
     const dd=div("sidebar-dropdown");
-    const exItem=div("sidebar-dropdown-item");exItem.textContent="📤 Exportieren";exItem.addEventListener("click",doExport);
+    const exItem=div("sidebar-dropdown-item");exItem.textContent="📤 Exportieren";exItem.addEventListener("click",()=>doExport());
     const imItem=div("sidebar-dropdown-item");imItem.textContent="📥 Importieren";imItem.addEventListener("click",()=>set({importOpen:true,sidebarMenuOpen:false}));
     dd.appendChild(exItem);dd.appendChild(imItem);
     dd.addEventListener("mouseleave",()=>set({sidebarMenuOpen:false}));
@@ -585,7 +591,7 @@ function renderList(){
   mwrap.appendChild(mbtn);
   if(S.menuOpen){
     const dd=div("dropdown");
-    const ex=div("dropdown-item");ex.textContent="\ud83d\udce4 Exportieren";ex.addEventListener("click",doExport);
+    const ex=div("dropdown-item");ex.textContent="\ud83d\udce4 Exportieren";ex.addEventListener("click",()=>doExport());
     const im=div("dropdown-item");im.textContent="\ud83d\udce5 Importieren";im.addEventListener("click",()=>set({importOpen:true,menuOpen:false}));
     dd.appendChild(ex);dd.appendChild(im);
     if(S.session){
@@ -1016,7 +1022,7 @@ function doDownload(blob,filename){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
 }
 async function doExport(entriesToExport){
-  const data=entriesToExport||S.entries;
+  const data=Array.isArray(entriesToExport)?entriesToExport:S.entries;
   const filename="bbq-lab-export-"+new Date().toISOString().split("T")[0]+".json";
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const file=new File([blob],filename,{type:"application/json"});
