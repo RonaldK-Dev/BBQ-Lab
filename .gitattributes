@@ -1,0 +1,5 @@
+# Eingebundene Fremddateien unveraendert lassen - keine Zeilenenden-Umwandlung.
+# Bei den Schriften waere eine Umwandlung fatal (Binaerdateien), beim
+# Supabase-SDK sorgt sie nur fuer unnoetige Diffs.
+*.woff2 binary
+vendor/** -text

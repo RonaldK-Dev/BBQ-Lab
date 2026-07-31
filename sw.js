@@ -5,16 +5,24 @@
 //   - Supabase API: Network-First mit Cache-Fallback
 //     → Frische Daten wenn online, letzter Stand wenn offline
 //   - Supabase Storage (Fotos): Cache-First (Fotos aendern sich nicht)
-//   - Google Fonts: Cache-First
+//
+// Seit 2026-07-31 liegen Fonts und supabase-js im Repo statt an fremden CDNs.
+// Damit sind alle Shell-Dateien gleicher Herkunft und die App startet offline
+// vollstaendig - vorher haingen Schriften und das Supabase-SDK am Netz.
 
-const CACHE = "bbq-lab-v6";
+const CACHE = "bbq-lab-v7";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon.png",
   "./favicon.png",
-  "./favicon-16.png"
+  "./favicon-16.png",
+  "./vendor/supabase-js-2.111.0.min.js",
+  "./fonts/bebas-neue-latin.woff2",
+  "./fonts/bebas-neue-latin-ext.woff2",
+  "./fonts/dm-sans-latin.woff2",
+  "./fonts/dm-sans-latin-ext.woff2"
 ];
 
 self.addEventListener("install", e => {
@@ -71,7 +79,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // App-Shell + Fonts + CDN: Stale-While-Revalidate
+  // App-Shell (inkl. Fonts und supabase-js, alle lokal): Stale-While-Revalidate
   e.respondWith(
     caches.match(req).then(cached => {
       const networkFetch = fetch(req)
