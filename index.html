@@ -34,6 +34,8 @@
     .ptr{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;height:0;overflow:hidden;background:var(--bg);transition:height 0.2s;z-index:20}
     .ptr-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
     .ptr-text{color:var(--muted);font-size:12px;margin-left:8px}
+    .toast{position:fixed;left:16px;right:16px;max-width:420px;margin-inline:auto;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--surface);border:1px solid var(--border);border-left:4px solid #ef4444;border-radius:10px;padding:12px 14px;color:var(--text);font-size:13px;line-height:1.45;box-shadow:0 6px 24px rgba(0,0,0,0.55);opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity 0.2s,transform 0.2s}
+    .toast.show{opacity:1;transform:translateY(0)}
     @keyframes spin{to{transform:rotate(360deg)}}
     .fab{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));right:24px;z-index:50;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:30px;cursor:pointer;box-shadow:0 4px 20px rgba(232,160,32,0.4);display:flex;align-items:center;justify-content:center}
     .list{padding:16px 20px 100px;display:flex;flex-direction:column;gap:12px}
@@ -269,6 +271,17 @@ const VERSIONS=[
 ];
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return[];}}
+// Sichtbarer Hinweis fuer Fehler, die sonst nur in der Konsole landen wuerden.
+// Haengt an body, ueberlebt daher das innerHTML-Leeren in render().
+let _toastEl=null,_toastTimer=null;
+function toast(msg,ms){
+  if(!_toastEl){_toastEl=document.createElement("div");_toastEl.className="toast";document.body.appendChild(_toastEl);}
+  _toastEl.textContent=msg;
+  void _toastEl.offsetWidth; // Reflow erzwingen, damit die CSS-Transition greift
+  _toastEl.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>_toastEl.classList.remove("show"),ms||6000);
+}
 function save(entries){
   localStorage.setItem(KEY,JSON.stringify(entries));
   syncToSupabase(entries);
@@ -319,8 +332,11 @@ async function doSignIn(){
     if(error)throw error;
     S.session=data.session;S.authPass="";S.authEmail="";
     const cloud=await loadFromSupabase();
-    S.entries=cloud||[];
+    // null = Laden fehlgeschlagen (nicht: keine Rezepte). Ohne Fallback saehe
+    // der User seine Sammlung als geloescht und wuerde Dubletten anlegen.
+    S.entries=cloud||load();
     set({view:"list",authLoading:false,authError:null,authMode:"login"});
+    if(!cloud) toast("Deine Rezepte konnten nicht aus der Cloud geladen werden. Angezeigt wird der zuletzt gespeicherte Stand auf diesem Gerät. Prüfe die Verbindung, bevor du etwas änderst.");
   }catch(e){
     console.error("SignIn-Fehler:",e);
     set({authLoading:false,authError:e?.message||"Login fehlgeschlagen"});
@@ -338,8 +354,9 @@ async function doSignUp(){
     if(data.session){
       S.session=data.session;S.authPass="";S.authEmail="";
       const cloud=await loadFromSupabase();
-      S.entries=cloud||[];
+      S.entries=cloud||load();
       set({view:"list",authLoading:false,authError:null,authMode:"login"});
+      if(!cloud) toast("Die Rezepte konnten nicht aus der Cloud geladen werden. Angezeigt wird der lokale Stand.");
     }else{
       set({authLoading:false,authInfo:"Account erstellt! Bitte einloggen.",authMode:"login",authPass:""});
     }
@@ -971,10 +988,27 @@ function renderDetail(){
   ar.appendChild(btn("del-btn","🗑️",async()=>{
     if(!confirm("Eintrag wirklich löschen?")) return;
     const id = entry.id;
+    const backup = S.entries;
     S.entries=S.entries.filter(e=>e.id!==id);
     localStorage.setItem(KEY,JSON.stringify(S.entries));
-    try{ await getSB().from("entries").delete().eq("id",id); }catch(e){ console.log("Delete error:",e); }
     set({view:"list"});
+    // Ohne Fehlerauswertung sah geloescht aus, was in der DB noch lag - der
+    // 10s-Poll holte den Eintrag danach zurueck. user_id als zweite Absicherung
+    // neben RLS.
+    let err=null;
+    try{
+      const uid=S.session&&S.session.user&&S.session.user.id;
+      if(!uid) throw new Error("Keine aktive Sitzung");
+      const res=await getSB().from("entries").delete().eq("id",id).eq("user_id",uid);
+      err=res.error;
+    }catch(e){ err=e; }
+    if(err){
+      console.error("Delete-Fehler:",err);
+      S.entries=backup;
+      localStorage.setItem(KEY,JSON.stringify(S.entries));
+      set({view:"list"});
+      toast("Löschen fehlgeschlagen – der Eintrag wurde wiederhergestellt. Prüfe die Verbindung und versuche es erneut.");
+    }
   }));
   wrap.appendChild(ar);
   return wrap;
@@ -1094,8 +1128,13 @@ function initPTR(){
   ptEl.innerHTML='<div class="ptr-spinner"></div><span class="ptr-text">Aktualisieren...</span>';
   document.body.prepend(ptEl);
 
+  // Nur in der Liste und nur im Mobile-Layout. Im Formular kostete ein Wisch
+  // sonst alle Eingaben; im Desktop-Layout gilt body{overflow:hidden}, dort ist
+  // window.scrollY immer 0 und JEDER Abwaertswisch loeste den Reload aus.
+  const ptrErlaubt=()=>S.view==="list"&&window.innerWidth<768;
+
   document.addEventListener("touchstart",e=>{
-    if(window.scrollY===0) ptStart=e.touches[0].clientY;
+    if(ptrErlaubt()&&window.scrollY===0) ptStart=e.touches[0].clientY;
   },{passive:true});
 
   document.addEventListener("touchmove",e=>{
@@ -1110,6 +1149,8 @@ function initPTR(){
     if(!ptStart) return;
     const dist=e.changedTouches[0].clientY-ptStart;
     ptStart=0;
+    // Ansicht kann sich waehrend der Geste geaendert haben
+    if(!ptrErlaubt()){ ptEl.style.height="0"; return; }
     if(dist>60){
       ptEl.style.height="44px";
       setTimeout(()=>location.reload(),400);
@@ -1135,6 +1176,7 @@ function initPTR(){
     const cloud=await loadFromSupabase();
     S.entries=cloud||load();
     S.view="list";
+    if(!cloud) setTimeout(()=>toast("Keine Verbindung zur Cloud. Angezeigt wird der zuletzt gespeicherte Stand auf diesem Gerät."),600);
   }else{
     S.view="auth";S.authMode="login";S.entries=[];
   }

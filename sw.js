@@ -7,7 +7,7 @@
 //   - Supabase Storage (Fotos): Cache-First (Fotos aendern sich nicht)
 //   - Google Fonts: Cache-First
 
-const CACHE = "bbq-lab-v5";
+const CACHE = "bbq-lab-v6";
 const SHELL = [
   "./",
   "./index.html",
