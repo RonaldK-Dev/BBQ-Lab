@@ -1,30 +1,37 @@
 name: Supabase Keep-Alive
 
-# Verhindert dass das kostenlose Supabase-Projekt nach 7 Tagen Inaktivität
-# automatisch pausiert wird. Feuert alle 3 Tage einen minimalen REST-Call
-# gegen die entries-Tabelle — reicht Supabase als "Aktivität" aus.
+# Prüft alle 3 Tage den Supabase-Projekt-Status über die Management API und
+# stößt bei Bedarf automatisch einen Restore an, statt nur einen Datenbank-Ping
+# zu loggen — verhindert, dass das Free-Tier-Projekt nach einer Pause offline
+# bleibt, bis das jemand manuell bemerkt.
 
 on:
   schedule:
-    # Alle 3 Tage um 12:00 UTC (Mo/Do/So bei ungeraden Wochen wechselnd)
     - cron: '0 12 */3 * *'
   workflow_dispatch: # ermöglicht manuellen Trigger via GitHub-UI
 
 jobs:
-  ping:
+  keep-alive:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST API
+      - name: Projekt-Status prüfen und ggf. restaurieren
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://oltntsahncrrseufbowj.supabase.co/rest/v1/entries?select=id&limit=1" \
-            -H "apikey: sb_publishable_Wz9U4K2Sb6ooyKWLvIb1oQ_0KT2qKYy" \
-            -H "Authorization: Bearer sb_publishable_Wz9U4K2Sb6ooyKWLvIb1oQ_0KT2qKYy")
-          echo "HTTP Status: $RESPONSE"
-          if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 206 ]; then
-            echo "✅ Supabase-Projekt ist aktiv"
+          PROJECT_REF="oltntsahncrrseufbowj"
+          STATUS=$(curl -s --retry 3 --retry-delay 10 --max-time 15 \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" | jq -r '.status // "UNKNOWN"')
+          echo "Projekt-Status: $STATUS"
+
+          if [ "$STATUS" = "ACTIVE_HEALTHY" ]; then
+            echo "✅ Projekt ist aktiv"
             exit 0
-          else
-            echo "❌ Unerwarteter Status-Code: $RESPONSE"
-            exit 1
           fi
+
+          echo "⚠️ Projekt ist $STATUS — starte Restore..."
+          curl -s --retry 3 --retry-delay 10 --max-time 15 -X POST \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/restore" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" -d '{}'
+          echo "🔄 Restore angestoßen — Projekt braucht ein bis zwei Minuten zum Hochfahren"
