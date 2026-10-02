@@ -2,15 +2,14 @@
 // Strategie:
 //   - App-Shell (HTML, Icons, Manifest): Stale-While-Revalidate
 //     → Start aus Cache (instant), Update im Hintergrund
-//   - Supabase API: Network-First mit Cache-Fallback
-//     → Frische Daten wenn online, letzter Stand wenn offline
+//   - Supabase API: kein Caching (Offline-Stand liegt in localStorage)
 //   - Supabase Storage (Fotos): Cache-First (Fotos aendern sich nicht)
 //
 // Seit 2026-07-31 liegen Fonts und supabase-js im Repo statt an fremden CDNs.
 // Damit sind alle Shell-Dateien gleicher Herkunft und die App startet offline
 // vollstaendig - vorher haingen Schriften und das Supabase-SDK am Netz.
 
-const CACHE = "bbq-lab-v7";
+const CACHE = "bbq-lab-v8";
 const SHELL = [
   "./",
   "./index.html",
@@ -46,19 +45,10 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Supabase REST-API: Network-First (frische Daten bevorzugen)
+  // Supabase REST-API: nicht anfassen, direkt ans Netz. Den Offline-Stand hat
+  // die App selbst in localStorage. Eine gecachte Antwort als 200 liess den
+  // 10s-Poll offline den lokalen Stand mit alten Cloud-Daten ueberschreiben.
   if (url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/")) {
-    e.respondWith(
-      fetch(req)
-        .then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(req, clone));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
     return;
   }
 

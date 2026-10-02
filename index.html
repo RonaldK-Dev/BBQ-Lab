@@ -296,6 +296,7 @@ function toast(msg,ms){
   _toastTimer=setTimeout(()=>_toastEl.classList.remove("show"),ms||6000);
 }
 function save(entries){
+  _syncGen++;
   localStorage.setItem(KEY,JSON.stringify(entries));
   syncToSupabase(entries);
 }
@@ -306,19 +307,44 @@ function getSB(){
   return _sb;
 }
 
-async function syncToSupabase(entries){
-  if(!S.session)return; // nicht eingeloggt -> kein Sync
-  try{
-    const db = getSB();
-    const uid = S.session.user.id;
-    for(const entry of entries){
-      await db.from("entries").upsert({id:entry.id, data:entry, user_id:uid, updated_at: new Date().toISOString()});
-    }
-    console.log("Sync OK:", entries.length, "entries (user:",S.session.user.email,")");
-  }catch(e){console.error("Sync error:",e);}
+// Sync-Zustand. supabase-js wirft bei DB-/RLS-Fehlern nicht, es liefert nur
+// {error}. Ohne Auswertung galt "Sync OK", obwohl nichts gespeichert war, und
+// der 10s-Poll ueberschrieb den lokalen Stand mit der Cloud.
+//   _synced: id -> JSON des zuletzt erfolgreich hochgeladenen Eintrags
+//   _syncing: laufende Uploads; _dirty: letzter Upload war fehlerhaft
+//   _syncGen: wird bei jeder lokalen Aenderung erhoeht, damit der Poll eine
+//             waehrend des Ladens veraltete Antwort verwerfen kann
+let _synced=new Map(),_syncing=0,_dirty=false,_syncGen=0,_syncChain=Promise.resolve();
+function markSynced(entries){_synced=new Map(entries.map(e=>[e.id,JSON.stringify(e)]));}
+
+function syncToSupabase(entries){
+  if(!S.session)return Promise.resolve(); // nicht eingeloggt -> kein Sync
+  _syncing++;
+  _syncChain=_syncChain.then(()=>doSync(entries)).finally(()=>{_syncing--;});
+  return _syncChain;
+}
+async function doSync(entries){
+  if(!S.session)return;
+  const db=getSB(),uid=S.session.user.id;
+  // Nur geaenderte Eintraege hochladen (statt jedes Mal alle).
+  const changed=entries.filter(e=>_synced.get(e.id)!==JSON.stringify(e));
+  let failed=0;
+  for(const entry of changed){
+    try{
+      const {error}=await db.from("entries").upsert({id:entry.id, data:entry, user_id:uid, updated_at:new Date().toISOString()});
+      if(error) throw error;
+      _synced.set(entry.id,JSON.stringify(entry));
+    }catch(e){failed++;console.error("Sync error:",e);}
+  }
+  if(failed){
+    if(!_dirty) toast("Speichern in der Cloud fehlgeschlagen. Deine Änderung liegt nur auf diesem Gerät, die App versucht es automatisch erneut.");
+    _dirty=true;
+  }else _dirty=false;
 }
 
-async function loadFromSupabase(){
+// passive=true: nur laden, nichts lokal ueberschreiben (Poll prueft erst, ob
+// die Antwort noch aktuell ist).
+async function loadFromSupabase(passive){
   if(!S.session)return null;
   try{
     const db = getSB();
@@ -327,7 +353,10 @@ async function loadFromSupabase(){
     if(error) throw error;
     if(data){
       const entries = data.map(r => r.data);
-      localStorage.setItem(KEY, JSON.stringify(entries));
+      if(!passive){
+        localStorage.setItem(KEY, JSON.stringify(entries));
+        markSynced(entries);
+      }
       return entries;
     }
   }catch(e){console.error("Load error:",e);}
@@ -381,6 +410,7 @@ async function doSignUp(){
 async function doSignOut(){
   try{await getSB().auth.signOut();}catch(e){console.error("SignOut:",e);}
   S.session=null;S.entries=[];
+  _synced=new Map();_dirty=false;_syncGen++;
   localStorage.removeItem(KEY);
   set({view:"auth",authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,menuOpen:false,sidebarMenuOpen:false,detailId:null,current:null});
 }
@@ -1003,6 +1033,7 @@ function renderDetail(){
     const id = entry.id;
     const backup = S.entries;
     S.entries=S.entries.filter(e=>e.id!==id);
+    _syncGen++;
     localStorage.setItem(KEY,JSON.stringify(S.entries));
     set({view:"list"});
     // Ohne Fehlerauswertung sah geloescht aus, was in der DB noch lag - der
@@ -1211,10 +1242,18 @@ function initPTR(){
     set({menuOpen:false});
   });
   setInterval(async()=>{
-    if(!S.session)return;
-    const cloud=await loadFromSupabase();
-    if(cloud&&JSON.stringify(cloud)!==JSON.stringify(S.entries)){
+    if(!S.session||_syncing)return;
+    // Letzter Upload fehlgeschlagen: erst erneut hochladen, nie die Cloud ueber
+    // lokale, noch nicht gesicherte Aenderungen legen.
+    if(_dirty){await syncToSupabase(S.entries);return;}
+    const gen=_syncGen;
+    const cloud=await loadFromSupabase(true);
+    // Antwort verwerfen, wenn sich waehrend des Ladens lokal was getan hat.
+    if(!cloud||_syncing||_dirty||gen!==_syncGen)return;
+    if(JSON.stringify(cloud)!==JSON.stringify(S.entries)){
       S.entries=cloud;
+      localStorage.setItem(KEY,JSON.stringify(cloud));
+      markSynced(cloud);
       if(S.view==="list") render();
     }
   }, 10000);
