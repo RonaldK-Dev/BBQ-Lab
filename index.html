@@ -356,6 +356,13 @@
       .card-name{font-size:23px}
       .desktop-list-title{font-size:26px;background:linear-gradient(180deg,#fff2da,#cdbfa6);-webkit-background-clip:text;background-clip:text;color:transparent}
     }
+    /* --- Glut Stufe 3: ruhige Symbole statt Emojis --- */
+    .ing-count::before{content:'';width:6px;height:6px;border-radius:2px;transform:rotate(45deg);background:linear-gradient(135deg,#ffbe3d,var(--accent2));margin-right:3px}
+    .status-pill{font-size:11.5px;padding:4px 11px}
+    .stat-row span:first-child{display:inline-flex;align-items:center;gap:6px}
+    .stat-row{color:#b3a894}
+    .stars{text-shadow:none}
+    .stars span[style*="var(--accent)"]{text-shadow:0 0 10px rgba(232,160,32,0.45)}
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -379,7 +386,7 @@ const FRACS=["\u00bc","\u00bd","\u00be","1","1\u00bd","2","3","4"];
 const TYPES=["Rub","Sauce","Marinade","Dip"];
 const MEATS=["Rind","Schwein","H\u00e4hnchen","Lamm","Fisch","Gem\u00fcse"];
 const SC={"in Arbeit":"#f59e0b","fertig":"#10b981","verworfen":"#ef4444"};
-const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
+const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
@@ -653,11 +660,11 @@ function renderList(){
     const verworfen=S.entries.filter(e=>e.status==="verworfen").length;
     const allActive=!S.filter&&!S.typeFilter&&!S.meatFilter.length&&!S.ratingFilter;
     [
-      ["🔥 Rezepte",S.entries.length,"__all__"],
+      ["◆ Rezepte",S.entries.length,"__all__"],
       ["★ Schnitt",avgRating,null],
-      ["✅ Fertig",done,"fertig"],
-      ["🔬 In Arbeit",wip,"in Arbeit"],
-      ["🚫 Verworfen",verworfen,"verworfen"]
+      ["✓ Fertig",done,"fertig"],
+      ["● In Arbeit",wip,"in Arbeit"],
+      ["✕ Verworfen",verworfen,"verworfen"]
     ].forEach(([label,val,filterKey])=>{
       const isActive=filterKey==="__all__"?allActive:(filterKey&&S.filter===filterKey);
       const row=div("stat-row"+(filterKey?" clickable":"")+(isActive?" active":""));
@@ -884,9 +891,9 @@ function renderList(){
       (e.meats||[]).forEach(m=>{const mp=div("card-meat-pill");mp.textContent=m;ct.appendChild(mp);});
       card.appendChild(ct);
     }
-    const st=div("stars");[1,2,3,4,5].forEach(n=>{const s=document.createElement("span");s.textContent="★";s.style.color=n<=e.rating?"var(--accent)":"var(--muted)";st.appendChild(s);});card.appendChild(st);
+    const st=div("stars");[1,2,3,4,5].forEach(n=>{const s=document.createElement("span");s.textContent="★";s.style.color=n<=e.rating?"var(--accent)":"rgba(255,235,205,0.16)";st.appendChild(s);});card.appendChild(st);
     const cnt=(e.ingredients||[]).filter(i=>i.name).length;
-    const ic=div("ing-count");ic.textContent="\ud83e\uddc2 "+cnt+" Zutaten";card.appendChild(ic);
+    const ic=div("ing-count");ic.textContent=cnt+" Zutaten";card.appendChild(ic);
     if(e.notizen){const cn2=div("card-note");cn2.textContent=e.notizen;card.appendChild(cn2);}
     list.appendChild(card);
   });
