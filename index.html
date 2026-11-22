@@ -421,6 +421,30 @@
       .detail-hero{height:340px;margin:0}
       .entry-card:hover .card-media .card-img{transform:scale(1.05)}
     }
+    /* --- 4.1: Versionen + Mengen umrechnen --- */
+    .ver-line{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}
+    .ver-node{flex-shrink:0;min-width:64px;padding:9px 12px 8px;border-radius:14px;text-align:center;cursor:pointer;background:rgba(255,235,205,0.05);border:1px solid var(--border);position:relative;transition:border-color 0.15s}
+    .ver-node::after{content:'';position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px;background:var(--st-color)}
+    .ver-node:hover{border-color:var(--border-hi)}
+    .ver-node.current{cursor:default;background:linear-gradient(180deg,rgba(232,160,32,0.22),rgba(232,160,32,0.06));border-color:rgba(232,160,32,0.6);box-shadow:0 0 18px rgba(232,140,32,0.2)}
+    .ver-node-v{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;color:#ffcf6e;letter-spacing:1px}
+    .ver-node-r{font-size:10px;color:var(--accent);margin-top:3px;letter-spacing:1px;min-height:12px}
+    .diff-box{margin-top:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,220,170,0.05),rgba(255,220,170,0.015));border:1px solid var(--border)}
+    .diff-head{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#9a8f7c;margin-bottom:8px}
+    .diff-row{display:flex;align-items:center;gap:10px;font-size:14px;padding:5px 0;color:var(--text)}
+    .diff-sym{width:22px;height:22px;flex-shrink:0;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+    .diff-row.add .diff-sym{background:rgba(16,185,129,0.16);color:#34d399}
+    .diff-row.del .diff-sym{background:rgba(239,68,68,0.16);color:#f87171}
+    .diff-row.del span:last-child{text-decoration:line-through;color:#9a8f7c}
+    .diff-row.chg .diff-sym{background:rgba(232,160,32,0.18);color:#ffc35a}
+    .diff-row.same,.diff-row.rate{color:#9a8f7c;font-size:13px}
+    .ing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+    .ing-head .sec-lbl{margin-bottom:0}
+    .scale-row{display:flex;gap:4px;padding:3px;border-radius:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border)}
+    .scale-btn{width:auto;padding:5px 10px;border-radius:9px;border:none;background:transparent;color:#a59b89;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+    .scale-btn.on{background:linear-gradient(135deg,#ffbe3d,var(--accent2));color:#1a0f04;box-shadow:0 2px 10px rgba(232,130,32,0.35)}
+    .scale-note{font-size:12px;color:#ffc35a;margin:-2px 0 10px}
+    .ing-table td.scaled{color:#fff0c8;text-shadow:0 0 12px rgba(255,190,80,0.5)}
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -448,6 +472,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"4.1",d:"2026-11-22",c:"Versionen einer Mischung als Zeitleiste im Detail, Unterschiede zur Vorversion (neu, entfernt, geändert), Mengen umrechnen ½× bis 3×."},
   {v:"4.0",d:"2026-11-22",c:"Neuer Aufbau: Kennzahlen und einklappbare Filter am Handy, Karten mit Platzhalter-Bild je Typ, Detail mit großem Foto und Mischungsverhältnis als Balken."},
   {v:"3.1",d:"2026-11-22",c:"Neues Design \"Glut\": warmes Hintergrundleuchten, Glas-Karten, Knöpfe mit Glut-Verlauf, größere Fotos. Nur Optik, alle Funktionen gleich."},
   {v:"3.0.1",d:"2026-07-28",c:"Fix: Login-Email jetzt case-insensitive (BBQ-Lab@... und bbq-lab@... funktionieren beide) + GitHub Action (Keep-Alive) verhindert Supabase-Auto-Pausen"},
@@ -679,7 +704,7 @@ function inp(cls,val,cb,extra){
 function txt(cls,text){const e=document.createElement("p");e.className=cls;e.textContent=text;return e;}
 function span(text){return document.createTextNode(text);}
 
-let S={filtersOpen:false,view:"list",entries:[],current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null,session:null,authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,authLoading:false};
+let S={scale:1,scaleFor:null,filtersOpen:false,view:"list",entries:[],current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null,session:null,authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,authLoading:false};
 let _lpTimer=null;
 // --- Design 4.0: Platzhalter, Versions-Chip, Mischungsverhaeltnis ---
 const PH={"Rub":["#e8a020","#7a2e0c"],"Sauce":["#d2452a","#4a120a"],"Marinade":["#c98a2a","#3d2a0c"],"Dip":["#8fae3a","#22300c"]};
@@ -701,6 +726,26 @@ function parseQty(q){
 }
 // Grobe Umrechnung auf Teeloeffel, nur fuer den Anteil-Balken (Gramm wie ml gerechnet)
 const _UNIT_TL={"TL":1,"EL":3,"Cup":48,"Prise":0.0625,"ml":0.2,"g":0.2,"L":200};
+function fmtQty(n){
+  if(!isFinite(n)||n<=0)return "";
+  const w=Math.floor(n),f=n-w;
+  const F=[[0,""],[0.125,"⅛"],[0.25,"¼"],[1/3,"⅓"],[0.5,"½"],[2/3,"⅔"],[0.75,"¾"],[1,""]];
+  if(n<10){let best=F[0];for(const x of F)if(Math.abs(f-x[0])<Math.abs(f-best[0]))best=x;
+    if(Math.abs(f-best[0])<0.05){const ww=best[0]===1?w+1:w;return (ww?String(ww):"")+best[1]||"0";}}
+  return String(Math.round(n*10)/10).replace(".",",");
+}
+function scaledQty(q,k){if(k===1)return q||"";const v=parseQty(q);return isNaN(v)?(q||""):fmtQty(v*k);}
+function normName(n){return (n||"").trim().toLowerCase();}
+function versionsOf(e){
+  return S.entries.filter(x=>normName(x.name)===normName(e.name)).sort((a,b)=>(parseFloat(a.version)||0)-(parseFloat(b.version)||0)||String(a.date).localeCompare(String(b.date)));
+}
+function diffIngs(prev,cur){
+  const key=i=>normName(i.name);const P=new Map((prev.ingredients||[]).filter(i=>i.name).map(i=>[key(i),i]));const C=new Map((cur.ingredients||[]).filter(i=>i.name).map(i=>[key(i),i]));
+  const out=[];
+  C.forEach((i,k)=>{const p=P.get(k);if(!p)out.push({t:"add",i});else if((p.qty||"")!==(i.qty||"")||(p.unit||"")!==(i.unit||""))out.push({t:"chg",i,p});});
+  P.forEach((i,k)=>{if(!C.has(k))out.push({t:"del",i});});
+  return out;
+}
 function mixShares(ings){
   const rows=ings.map(i=>{const q=parseQty(i.qty),f=_UNIT_TL[i.unit];return(isNaN(q)||!f)?null:q*f;});
   const ok=rows.filter(x=>x!==null&&x>0);
@@ -1234,9 +1279,50 @@ function renderDetail(){
     di.appendChild(dt);
   }
   dh.appendChild(di);wrap.appendChild(dh);
+  // Versionen derselben Mischung + Unterschiede zur Vorversion
+  const vers=versionsOf(entry);
+  if(vers.length>1){
+    const vs=div("section ver-section");
+    const vl=div("sec-lbl");vl.textContent="Versionen";vs.appendChild(vl);
+    const tl=div("ver-line");
+    vers.forEach(v=>{
+      const c=div("ver-node"+(v.id===entry.id?" current":""));
+      const vv=div("ver-node-v");vv.textContent="V."+(v.version||"?");
+      const vr=div("ver-node-r");vr.textContent=v.rating?("★".repeat(v.rating)):"–";
+      c.appendChild(vv);c.appendChild(vr);c.style.setProperty("--st-color",SC[v.status]);
+      if(v.id!==entry.id)c.addEventListener("click",()=>set({detailId:v.id}));
+      tl.appendChild(c);
+    });
+    vs.appendChild(tl);
+    const idx=vers.findIndex(v=>v.id===entry.id);
+    if(idx>0){
+      const prev=vers[idx-1];const d=diffIngs(prev,entry);
+      const box=div("diff-box");
+      const h=div("diff-head");h.textContent="Was ist neu gegenüber V."+(prev.version||"?");box.appendChild(h);
+      if(!d.length){const n=div("diff-row same");n.textContent="Zutaten unverändert";box.appendChild(n);}
+      d.forEach(x=>{
+        const r=div("diff-row "+x.t);
+        const sym=document.createElement("span");sym.className="diff-sym";sym.textContent=x.t==="add"?"+":x.t==="del"?"−":"↻";
+        const tx=document.createElement("span");
+        if(x.t==="chg")tx.textContent=x.i.name+": "+(x.p.qty||"")+" "+(x.p.unit||"")+" → "+(x.i.qty||"")+" "+(x.i.unit||"");
+        else tx.textContent=x.i.name+" ("+(x.i.qty||"")+" "+(x.i.unit||"")+")";
+        r.appendChild(sym);r.appendChild(tx);box.appendChild(r);
+      });
+      if((prev.rating||0)!==(entry.rating||0)){const r=div("diff-row rate");r.textContent="Bewertung "+(prev.rating||0)+"★ → "+(entry.rating||0)+"★";box.appendChild(r);}
+      vs.appendChild(box);
+    }
+    wrap.appendChild(vs);
+  }
 
   const is=div("section");
-  const isl=div("sec-lbl");isl.textContent="Zutaten";is.appendChild(isl);
+  if(S.scaleFor!==entry.id){S.scale=1;S.scaleFor=entry.id;}
+  const k=S.scale;
+  const ish=div("ing-head");
+  const isl=div("sec-lbl");isl.textContent="Zutaten";ish.appendChild(isl);
+  const sc=div("scale-row");
+  [[0.5,"½×"],[1,"1×"],[2,"2×"],[3,"3×"]].forEach(([f,l])=>{const b=btn("scale-btn"+(k===f?" on":""),l,()=>set({scale:f}));b.title="Mengen "+l+" umrechnen";sc.appendChild(b);});
+  ish.appendChild(sc);is.appendChild(ish);
+  if(k!==1){const hn=div("scale-note");hn.textContent="Mengen auf "+String(k).replace(".",",")+"× umgerechnet – gespeichert bleibt das Original.";is.appendChild(hn);}
   const nb=div("note-box");
   const tbl=document.createElement("table");tbl.className="ing-table";
   const tb=document.createElement("tbody");
@@ -1251,7 +1337,7 @@ function renderDetail(){
   }
   _ings.forEach((ing,i)=>{
     const tr=document.createElement("tr");
-    const td1=document.createElement("td");td1.textContent=ing.qty||"";
+    const td1=document.createElement("td");td1.textContent=scaledQty(ing.qty,k);if(k!==1)td1.classList.add("scaled");
     const td2=document.createElement("td");td2.textContent=ing.unit||"";
     const td3=document.createElement("td");td3.textContent=ing.name;
     if(_sh){td3.style.setProperty("--dot",_pal[i%_pal.length]);td3.className="has-dot";}
