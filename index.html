@@ -445,6 +445,49 @@
     .scale-btn.on{background:linear-gradient(135deg,#ffbe3d,var(--accent2));color:#1a0f04;box-shadow:0 2px 10px rgba(232,130,32,0.35)}
     .scale-note{font-size:12px;color:#ffc35a;margin:-2px 0 10px}
     .ing-table td.scaled{color:#fff0c8;text-shadow:0 0 12px rgba(255,190,80,0.5)}
+    /* --- 4.2: Formular, leere Liste, Menue --- */
+    .form-wrap{padding-bottom:24px}
+    .form-header{margin-bottom:18px}
+    .form-group{padding:16px 16px 4px;margin-bottom:14px;border-radius:18px;background:linear-gradient(180deg,rgba(255,220,170,0.05),rgba(255,220,170,0.012));border:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,230,190,0.06)}
+    .form-group-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:#ffcf6e;margin-bottom:12px}
+    .form-group .field:last-child{margin-bottom:12px}
+    .seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,0.3);border:1px solid var(--border)}
+    .seg-btn{flex:1;width:auto;padding:10px 6px;border:none;border-radius:10px;background:transparent;color:#a59b89;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s,color 0.15s}
+    .seg-btn.on{color:var(--sc);background:color-mix(in srgb,var(--sc) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sc) 55%,transparent)}
+    .stars-input{gap:2px}
+    .star-btn{font-size:32px;transition:transform 0.12s}
+    .star-btn:active{transform:scale(1.25)}
+    .photo-pick{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:1.5px dashed rgba(232,160,32,0.35);border-radius:14px;background:radial-gradient(circle at 50% 0%,rgba(232,160,32,0.08),transparent 70%)}
+    .pp-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#1a0f04;background:linear-gradient(135deg,#ffbe3d,var(--accent2));box-shadow:0 4px 16px rgba(232,130,32,0.35)}
+    .pp-txt{font-size:13px;color:#b3a894}
+    .photo-preview{border-radius:14px;max-height:220px}
+    .ing-block{padding:16px;border-radius:18px;margin-bottom:14px}
+    .ing-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:#ffcf6e;text-transform:none}
+    .frac-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+    .frac-btn{flex-shrink:0;min-width:42px;border-radius:10px}
+    .col-lbl.qty{width:50px}.col-lbl.unit{width:66px}
+    .ing-qty{width:50px!important}
+    .ing-unit{width:66px!important;padding:8px 4px!important;text-align:center}
+    .ing-row{gap:5px}
+    .ing-del{color:#7d7566;border-radius:8px}
+    .ing-del:hover{color:#f87171;background:rgba(239,68,68,0.1)}
+    .add-ing{border-color:rgba(232,160,32,0.35)!important;color:#ffc35a!important;border-radius:12px;padding:12px}
+    .save-bar{position:sticky;bottom:0;padding:14px 0 calc(14px + env(safe-area-inset-bottom,0px));margin-top:6px;background:linear-gradient(180deg,transparent,rgba(11,10,8,0.92) 35%);z-index:5}
+    .save-btn{margin-top:0;font-size:20px}
+    .empty-logo{width:96px;height:96px;margin:0 auto 18px;border-radius:26px;background:url(icon.png) center/cover;box-shadow:0 0 0 1px rgba(255,190,110,0.3),0 14px 50px rgba(232,120,32,0.45)}
+    .empty h3{font-size:28px;letter-spacing:1.5px;background:linear-gradient(180deg,#ffd27a,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .empty p{max-width:280px;margin:0 auto;line-height:1.5}
+    .empty-icon{font-size:56px;color:#5c5446}
+    .empty-cta{width:auto;margin-top:22px;padding:14px 26px;border:none;border-radius:14px;background:linear-gradient(135deg,#ffbe3d,var(--accent) 38%,var(--accent2));color:#1a0f04;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;box-shadow:0 8px 28px rgba(232,130,32,0.45)}
+    .dropdown{min-width:210px}
+    .dropdown-item{font-size:14px;padding:14px 18px}
+    .dropdown-item:hover{background:rgba(232,160,32,0.08);color:#ffc35a}
+    .dd-logout{flex-direction:column;align-items:flex-start;gap:2px;color:#f87171}
+    .dd-sub{font-size:11px;color:#8f8676}
+    @media(min-width:768px){
+      .desktop-modal-inner .form-wrap{padding:28px 28px 0}
+      .save-bar{background:linear-gradient(180deg,transparent,rgba(22,19,15,0.96) 35%)}
+    }
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -472,6 +515,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"4.2",d:"2026-11-22",c:"Formular in Gruppen-Karten, Status als Schalter, Speichern-Knopf bleibt unten sichtbar. Schönere leere Liste, Menü ohne Emojis, fehlende Fotos zeigen den Platzhalter."},
   {v:"4.1",d:"2026-11-22",c:"Versionen einer Mischung als Zeitleiste im Detail, Unterschiede zur Vorversion (neu, entfernt, geändert), Mengen umrechnen ½× bis 3×."},
   {v:"4.0",d:"2026-11-22",c:"Neuer Aufbau: Kennzahlen und einklappbare Filter am Handy, Karten mit Platzhalter-Bild je Typ, Detail mit großem Foto und Mischungsverhältnis als Balken."},
   {v:"3.1",d:"2026-11-22",c:"Neues Design \"Glut\": warmes Hintergrundleuchten, Glas-Karten, Knöpfe mit Glut-Verlauf, größere Fotos. Nur Optik, alle Funktionen gleich."},
@@ -847,14 +891,14 @@ function renderList(){
     foot.appendChild(footTitle);
     if(S.session){
       const ue=document.createElement("div");ue.className="sidebar-user"+(isAdmin()?" sidebar-user-admin":"");
-      ue.textContent=(isAdmin()?"🔧 ":"")+S.session.user.email;
+      ue.textContent=S.session.user.email+(isAdmin()?" · Admin":"");
       foot.appendChild(ue);
       if(isAdmin()){
         const adminLink=document.createElement("a");
         adminLink.className="sidebar-admin-link";
         adminLink.href="https://supabase.com/dashboard/project/"+SUPABASE_PROJECT_ID+"/auth/users";
         adminLink.target="_blank";adminLink.rel="noopener";
-        adminLink.textContent="👥 Benutzerverwaltung";
+        adminLink.textContent="Benutzerverwaltung ↗";
         foot.appendChild(adminLink);
       }
       const lo=document.createElement("button");lo.className="sidebar-logout-btn";lo.textContent="Abmelden";
@@ -905,17 +949,16 @@ function renderList(){
   mwrap.appendChild(mbtn);
   if(S.menuOpen){
     const dd=div("dropdown");
-    const ex=div("dropdown-item");ex.textContent="\ud83d\udce4 Exportieren";ex.addEventListener("click",()=>doExport());
-    const im=div("dropdown-item");im.textContent="\ud83d\udce5 Importieren";im.addEventListener("click",()=>set({importOpen:true,menuOpen:false}));
+    const ex=div("dropdown-item");ex.textContent="Exportieren";ex.addEventListener("click",()=>doExport());
+    const im=div("dropdown-item");im.textContent="Importieren";im.addEventListener("click",()=>set({importOpen:true,menuOpen:false}));
     dd.appendChild(ex);dd.appendChild(im);
     if(S.session){
       if(isAdmin()){
-        const ad=div("dropdown-item");ad.textContent="\ud83d\udd27 Admin / Supabase";
+        const ad=div("dropdown-item");ad.textContent="Benutzerverwaltung";
         ad.addEventListener("click",()=>{window.open("https://supabase.com/dashboard/project/"+SUPABASE_PROJECT_ID+"/auth/users","_blank");set({menuOpen:false});});
         dd.appendChild(ad);
       }
-      const lo=div("dropdown-item");lo.textContent="\ud83d\udeaa Abmelden ("+S.session.user.email+")";
-      lo.style.fontSize="12px";lo.addEventListener("click",doSignOut);
+      const lo=div("dropdown-item");lo.textContent="Abmelden";const lsub=document.createElement("span");lsub.className="dd-sub";lsub.textContent=S.session.user.email;lo.appendChild(lsub);lo.classList.add("dd-logout");lo.addEventListener("click",doSignOut);
       dd.appendChild(lo);
     }
     mwrap.appendChild(dd);
@@ -990,14 +1033,14 @@ function renderList(){
   const list=div("list"+(S.selectionMode?" selecting":""));
   if(S.entries.length===0){
     const em=div("empty");
-    const icon=div("empty-icon");icon.textContent="\ud83e\uddc2";
-    const h3=document.createElement("h3");h3.textContent="Noch keine Rezepte";
-    const p=document.createElement("p");p.style.fontSize="14px";p.textContent="Tippe auf + um dein erstes Rezept zu starten";
-    em.appendChild(icon);em.appendChild(h3);em.appendChild(p);
+    const icon=div("empty-logo");
+    const h3=document.createElement("h3");h3.textContent="Dein Labor ist noch leer";
+    const p=document.createElement("p");p.style.fontSize="14px";p.textContent="Leg deine erste Mischung an. Jede Änderung wird später eine neue Version.";
+    em.appendChild(icon);em.appendChild(h3);em.appendChild(p);em.appendChild(btn("empty-cta","+ ERSTE MISCHUNG",openNew));
     list.appendChild(em);
   } else if(filtered.length===0){
     const em=div("empty");
-    const icon=div("empty-icon");icon.textContent="\ud83d\udd0d";
+    const icon=div("empty-icon");icon.textContent="⌕";
     const h3=document.createElement("h3");h3.textContent="Keine Treffer";
     const p=document.createElement("p");p.style.fontSize="14px";p.textContent="Filter oder Suche anpassen";
     em.appendChild(icon);em.appendChild(h3);em.appendChild(p);
@@ -1018,7 +1061,7 @@ function renderList(){
     card.addEventListener("touchmove",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
     card.addEventListener("touchend",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
     const media=div("card-media");
-    if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;ci.loading="lazy";media.appendChild(ci);}
+    if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;ci.loading="lazy";ci.addEventListener("error",()=>ci.replaceWith(placeholder(e,"card-ph")));media.appendChild(ci);}
     else media.appendChild(placeholder(e,"card-ph"));
     card.appendChild(media);
     const ck=div("card-check"+(S.selectedIds.includes(e.id)?" checked":""));
@@ -1103,7 +1146,7 @@ function renderForm(){
     prm.addEventListener("click",()=>{S.pendingPhoto=null;S.current=Object.assign({},S.current,{photoUrl:""});render();});
     phf.appendChild(prm);
   }else{
-    const ppick=div("photo-pick");ppick.innerHTML="📷<br>Foto aufnehmen / wählen";
+    const ppick=div("photo-pick");const pp1=div("pp-icon");pp1.textContent="+";const pp2=div("pp-txt");pp2.textContent="Foto aufnehmen oder wählen";ppick.appendChild(pp1);ppick.appendChild(pp2);
     ppick.addEventListener("click",()=>phi.click());
     phf.appendChild(ppick);
   }
@@ -1133,12 +1176,13 @@ function renderForm(){
   // Status
   const sf=div("field");
   const sl=document.createElement("label");sl.className="lbl";sl.textContent="Status";
-  const sel=document.createElement("select");
+  const sel=div("seg");
   ["in Arbeit","fertig","verworfen"].forEach(o=>{
-    const op=document.createElement("option");op.value=o;op.textContent=o;
-    if(o===c.status)op.selected=true;sel.appendChild(op);
+    const b=document.createElement("button");b.type="button";b.className="seg-btn"+(o===c.status?" on":"");b.textContent=SI[o]+" "+o;
+    b.style.setProperty("--sc",SC[o]);
+    b.addEventListener("click",()=>{S.current=Object.assign({},S.current,{status:o});sel.querySelectorAll(".seg-btn").forEach(x=>x.classList.toggle("on",x===b));});
+    sel.appendChild(b);
   });
-  sel.addEventListener("change",e=>{S.current=Object.assign({},S.current,{status:e.target.value});});
   sf.appendChild(sl);sf.appendChild(sel);wrap.appendChild(sf);
 
   // Typ
@@ -1180,7 +1224,7 @@ function renderForm(){
   FRACS.forEach(f=>{
     const b=document.createElement("button");b.className="frac-btn";b.textContent=f;
     b.addEventListener("click",()=>{
-      const ings=c.ingredients.map((x,i)=>i===S.focusedIng?Object.assign({},x,{qty:f}):x);
+      const ings=S.current.ingredients.map((x,i)=>i===S.focusedIng?Object.assign({},x,{qty:f}):x);
       set({current:Object.assign({},S.current,{ingredients:ings})});
     });
     fr.appendChild(b);
@@ -1232,7 +1276,15 @@ function renderForm(){
   ta.placeholder="Zu salzig? Mehr Zitrone? Was w\u00fcrdest du \u00e4ndern?";
   ta.addEventListener("input",e=>{S.current=Object.assign({},S.current,{notizen:e.target.value});});
   nzf.appendChild(nzl);nzf.appendChild(ta);wrap.appendChild(nzf);
-  wrap.appendChild(btn("save-btn","SPEICHERN",doSave));
+  // In Gruppen-Karten ordnen (nur Optik)
+  const grp=(title,nodes)=>{const g=div("form-group");if(title){const h=div("form-group-title");h.textContent=title;g.appendChild(h);}nodes.forEach(n=>g.appendChild(n));wrap.appendChild(g);};
+  [nf,phf,df,rf,sf,tf,mf,ib,nzf].forEach(n=>n.remove());
+  grp("Die Mischung",[nf,phf]);
+  grp("Bewertung & Stand",[rf,sf,df]);
+  grp("Einordnung",[tf,mf]);
+  wrap.appendChild(ib);
+  grp("",[nzf]);
+  const sb=div("save-bar");sb.appendChild(btn("save-btn","SPEICHERN",doSave));wrap.appendChild(sb);
   return wrap;
 }
 
@@ -1241,7 +1293,7 @@ function renderDetail(){
   if(!entry)return div("");
   const wrap=div("detail-wrap");
   const hero=div("detail-hero");
-  if(entry.photoUrl){const pi=document.createElement("img");pi.className="detail-photo";pi.src=entry.photoUrl;pi.alt=entry.name;hero.appendChild(pi);}
+  if(entry.photoUrl){const pi=document.createElement("img");pi.className="detail-photo";pi.src=entry.photoUrl;pi.alt=entry.name;pi.addEventListener("error",()=>pi.replaceWith(placeholder(entry,"detail-ph")));hero.appendChild(pi);}
   else hero.appendChild(placeholder(entry,"detail-ph"));
   hero.appendChild(btn("back-btn hero-back","\u2190",()=>set({view:"list"})));
   wrap.appendChild(hero);
