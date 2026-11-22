@@ -732,6 +732,32 @@
     html[data-theme="cl"] .mix-fin-t{font-style:italic;font-weight:400}
     html[data-theme="cl"] .mix-fin-row button{border-radius:8px}
     html[data-theme="glut"] .mix-name,html[data-theme="glut"] .mix-qty,html[data-theme="glut"] .mix-fin-t{letter-spacing:1px}
+    /* ===== CL Ausgabe 3: Titelgeschichte, Formular, Seitenleiste ===== */
+    html[data-theme="cl"] .entry-card.feature .card-media{height:300px}
+    html[data-theme="cl"] .entry-card.feature .card-name{font-size:40px!important;letter-spacing:-1.2px!important;line-height:1}
+    html[data-theme="cl"] .entry-card.feature .card-note{font-size:21px!important;-webkit-line-clamp:4}
+    html[data-theme="cl"] .entry-card.feature .ed-num b{background:var(--accent);color:var(--on-a);padding:3px 7px;border-radius:2px}
+    html[data-theme="cl"] .entry-card.feature{padding-bottom:28px!important;margin-bottom:30px;border-bottom:1px solid var(--accent)!important}
+    @media(min-width:768px){
+      html[data-theme="cl"] .entry-card.feature{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);column-gap:32px;align-content:start}
+      html[data-theme="cl"] .entry-card.feature>.card-media{grid-column:1;grid-row:1/span 5;height:360px;margin:0!important}
+      html[data-theme="cl"] .entry-card.feature{grid-template-rows:auto auto auto auto 1fr;row-gap:0}
+      html[data-theme="cl"] .entry-card.feature>:not(.card-media):not(.card-check){grid-column:2;justify-self:start;max-width:100%}
+      html[data-theme="cl"] .entry-card.feature>.card-note{justify-self:stretch}
+      html[data-theme="cl"] .entry-card.feature>.card-check{grid-area:1/1}
+      html[data-theme="cl"] .entry-card.feature{padding-bottom:26px!important;margin-bottom:4px}
+      html[data-theme="cl"] .entry-card.feature .card-name{font-size:52px!important}
+      html[data-theme="cl"] .entry-card.feature .card-top{padding-top:6px!important}
+    }
+    /* Formular: nummerierte Kapitel */
+    html[data-theme="cl"] .form-wrap,html[data-theme="cl"] .form-groups{counter-reset:fg}
+    html[data-theme="cl"] .form-group{counter-increment:fg;background:none!important;border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;padding:20px 0 6px!important}
+    html[data-theme="cl"] .form-group-title{font-size:26px!important;font-weight:400!important;letter-spacing:-0.5px!important;color:var(--hi)!important}
+    html[data-theme="cl"] .form-group-title::before{content:counter(fg,decimal-leading-zero) " \2014  Kapitel";display:block;font-family:var(--fm);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+    html[data-theme="cl"] .form-title{font-size:34px!important;font-weight:400!important;letter-spacing:-1px!important}
+    html[data-theme="cl"] .save-bar{background:linear-gradient(180deg,transparent,var(--bg) 40%)!important}
+    /* Seitenleiste: Inhaltsverzeichnis statt Kasten */
+    html[data-theme="cl"] .sidebar-stats{background:none!important;border:0!important;border-top:1px solid var(--border)!important;border-bottom:1px solid var(--border)!important;border-radius:0!important;padding:10px 0!important}
     /* Look-Wahl */
     .theme-row{display:flex;gap:8px;padding:12px 18px 14px;border-bottom:1px solid var(--border)}
     .theme-sw{width:auto;flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px;border:1px solid transparent;border-radius:10px;background:none;color:var(--mut2);font-size:10px;cursor:pointer;font-family:var(--fb)}
@@ -768,6 +794,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"5.3",d:"2026-11-22",c:"CL: Titelgeschichte oben in der Liste (bestes Rezept mit Foto, groß), Formular mit nummerierten Kapiteln, ruhigere Seitenleiste."},
   {v:"5.2",d:"2026-11-22",c:"Mischen-Modus: im Rezept auf „Jetzt mischen“, Zutaten groß der Reihe nach abhaken (auch umgerechnet), der Bildschirm bleibt dabei an."},
   {v:"5.1",d:"2026-11-22",c:"CL wird Standard und sieht aus wie ein Rezept-Magazin: echte Schriften (Fraunces, Inter, JetBrains Mono), nummerierte Rezepte, Zutaten wie auf einer Speisekarte, Notizen mit Initiale."},
   {v:"5.0",d:"2026-11-22",c:"Vier Looks zum Umschalten im Menü: Clutch (neuer Standard, Lime/Lila), Midas (Gold), CL-Style (Terracotta, Serif) und Glut (Schwarz-Orange)."},
@@ -1320,9 +1347,16 @@ function renderList(){
     em.appendChild(icon);em.appendChild(h3);em.appendChild(p);
     list.appendChild(em);
   }
+  const _plain=!S.filter&&!S.search&&!S.typeFilter&&!S.meatFilter.length&&!S.ratingFilter&&!S.selectionMode;
+  let _featId=null;
+  if(theme()==="cl"&&_plain&&filtered.length>2){
+    const cand=filtered.filter(e=>e.photoUrl).sort((a,b)=>(b.rating||0)-(a.rating||0)||((b.status==="fertig")-(a.status==="fertig")));
+    if(cand.length){_featId=cand[0].id;const fi=filtered.findIndex(e=>e.id===_featId);filtered.unshift(filtered.splice(fi,1)[0]);}
+  }
   filtered.forEach((e,_i)=>{
     const card=div("entry-card"+(S.selectionMode&&S.selectedIds.includes(e.id)?" selected":""));
     card.style.setProperty("--st-color",SC[e.status]);
+    if(e.id===_featId)card.classList.add("feature");
     card.addEventListener("click",()=>{
       if(S.selectionMode){
         const ids=S.selectedIds.includes(e.id)?S.selectedIds.filter(x=>x!==e.id):[...S.selectedIds,e.id];
@@ -1344,7 +1378,7 @@ function renderList(){
     card.appendChild(ck);
     const ctop=div("card-top");
     const nd=div("");
-    {const en=div("ed-num");const b=document.createElement("b");b.textContent="Nº "+pad2(_i+1);const ii=document.createElement("i");const sp=document.createElement("span");sp.textContent=e.type||"Rezept";en.appendChild(b);en.appendChild(ii);en.appendChild(sp);nd.appendChild(en);}
+    {const en=div("ed-num");const b=document.createElement("b");b.textContent=e.id===_featId?"Titelgeschichte":"Nº "+pad2(_i+1);const ii=document.createElement("i");const sp=document.createElement("span");sp.textContent=e.type||"Rezept";en.appendChild(b);en.appendChild(ii);en.appendChild(sp);nd.appendChild(en);}
     const cn=div("card-name");nameWithVer(cn,e);
     const cd=div("card-date");cd.textContent=e.date;
     nd.appendChild(cn);nd.appendChild(cd);
