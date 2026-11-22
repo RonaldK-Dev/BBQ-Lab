@@ -323,7 +323,6 @@
     .header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(232,160,32,0.6),transparent)}
     /* Karten: Name in Markenschrift, Glut-Ecke bei Karten ohne Foto */
     .card-name{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:24px;letter-spacing:1.2px;line-height:1.05;color:#fbf3e4}
-    .entry-card:not(:has(.card-img))::after{content:'';position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(232,130,32,0.22),transparent 70%);pointer-events:none}
     .entry-card .card-img{transition:transform 0.5s ease}
     .card-note{font-style:italic;color:#a39885;border-left:2px solid rgba(232,160,32,0.3);padding-left:10px;margin-top:6px}
     .ing-count{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;background:rgba(255,235,205,0.05);border:1px solid var(--border);font-size:11px;margin-top:6px}
@@ -363,6 +362,65 @@
     .stat-row{color:#b3a894}
     .stars{text-shadow:none}
     .stars span[style*="var(--accent)"]{text-shadow:0 0 10px rgba(232,160,32,0.45)}
+    /* --- Design 4.0: neuer Aufbau --- */
+    .card-media{position:relative;margin:-16px -16px 14px;height:168px;overflow:hidden;border-radius:17px 17px 0 0}
+    .card-media .card-img{width:100%;height:100%;margin:0;border-radius:0;-webkit-mask-image:none;mask-image:none;display:block}
+    .card-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,8,0.05) 40%,rgba(20,17,13,0.85) 100%);pointer-events:none}
+    .status-pill.on-media{position:absolute;left:12px;top:12px;z-index:2;background:rgba(11,10,8,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid;font-size:11px}
+    .card-ph,.detail-ph{position:relative;width:100%;height:100%;overflow:hidden;background:
+      radial-gradient(circle at 78% 30%,color-mix(in srgb,var(--ph1) 55%,transparent),transparent 55%),
+      radial-gradient(circle at 15% 110%,color-mix(in srgb,var(--ph1) 35%,transparent),transparent 60%),
+      linear-gradient(135deg,var(--ph2),#0d0b09)}
+    .card-ph::before,.detail-ph::before{content:'';position:absolute;inset:0;opacity:0.35;background-image:radial-gradient(rgba(255,230,190,0.55) 1px,transparent 1.4px),radial-gradient(rgba(255,200,120,0.35) 1px,transparent 1.2px);background-size:14px 14px,23px 23px;background-position:0 0,7px 11px;-webkit-mask-image:radial-gradient(circle at 78% 30%,#000,transparent 70%);mask-image:radial-gradient(circle at 78% 30%,#000,transparent 70%)}
+    .ph-ini{position:absolute;right:14px;top:50%;transform:translateY(-58%);font-family:'Bebas Neue',sans-serif;font-size:92px;line-height:1;letter-spacing:2px;color:rgba(255,240,215,0.14);text-shadow:0 0 40px color-mix(in srgb,var(--ph1) 60%,transparent)}
+    .ph-type{position:absolute;right:16px;bottom:30px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,235,205,0.55);z-index:1}
+    .card-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px}
+    .ver-chip{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;padding:2px 8px;border-radius:20px;background:rgba(232,160,32,0.14);border:1px solid rgba(232,160,32,0.4);-webkit-text-fill-color:#ffc35a;color:#ffc35a;transform:translateY(-3px)}
+    .card-top{margin-bottom:6px}
+    .entry-card::before{z-index:3}
+    /* Handy: Kennzahlen + Filter-Knopf */
+    .m-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px 2px}
+    .m-stat{padding:10px 6px 9px;border-radius:14px;text-align:center;background:linear-gradient(180deg,rgba(255,220,170,0.06),rgba(255,220,170,0.015));border:1px solid var(--border);box-shadow:inset 0 1px 0 rgba(255,230,190,0.06)}
+    .m-stat.clickable{cursor:pointer}
+    .m-stat.active{border-color:rgba(232,160,32,0.55);background:linear-gradient(180deg,rgba(232,160,32,0.2),rgba(232,160,32,0.05));box-shadow:0 0 18px rgba(232,140,32,0.18)}
+    .m-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:#ffcf6e}
+    .m-stat-lbl{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#9a8f7c;margin-top:4px}
+    .mobile-search-wrap{display:flex;gap:8px;align-items:center;padding:12px 16px 4px}
+    .filter-toggle{flex-shrink:0;width:auto;padding:9px 14px;border-radius:12px;background:rgba(255,235,205,0.06);border:1px solid var(--border-hi);color:#c9bfae;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+    .filter-toggle.has{color:#1a0f04;background:linear-gradient(135deg,#ffbe3d,var(--accent2));border-color:transparent;font-weight:600}
+    .filter-toggle.open{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,160,32,0.16)}
+    .mobile-filter-wrap{display:none}
+    .mobile-filter-wrap.open{display:flex;animation:fdown 0.18s ease-out}
+    @keyframes fdown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    .list{padding-top:14px}
+    /* Detail: Buehne + Mischung */
+    .detail-hero{position:relative;height:300px;margin:-8px 0 0;border-radius:22px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.5)}
+    .detail-hero .detail-photo{width:100%;height:100%;max-height:none;object-fit:cover;margin:0;border-radius:0;-webkit-mask-image:none;mask-image:none;box-shadow:none}
+    .detail-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,8,0.35) 0%,transparent 30%,transparent 60%,rgba(11,10,8,0.7) 100%);pointer-events:none}
+    .detail-hero .ph-ini{font-size:150px}
+    .detail-ph .ph-type{top:26px;bottom:auto;right:22px}
+    .detail-ph .ph-ini{top:44%}
+    .hero-back{position:absolute;left:14px;top:14px;z-index:2;background:rgba(11,10,8,0.55)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-color:rgba(255,235,205,0.2)!important;width:42px;height:42px;border-radius:14px}
+    .detail-header{margin-top:-46px;padding:0 6px;margin-bottom:18px}
+    .detail-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-size:40px}
+    .detail-name{background:none;-webkit-text-fill-color:#fbf3e4;color:#fbf3e4}
+    .detail-name .ver-chip{font-size:12px;transform:translateY(-6px)}
+    .mix-title{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#9a8f7c;margin:2px 0 8px}
+    .mix-bar{display:flex;gap:2px;height:14px;border-radius:8px;overflow:hidden;margin-bottom:14px;box-shadow:0 0 20px rgba(232,130,32,0.18)}
+    .mix-seg{min-width:3px}
+    .ing-table td.has-dot::before{content:'';display:inline-block;width:8px;height:8px;border-radius:3px;background:var(--dot);margin-right:9px;vertical-align:middle;transform:translateY(-1px)}
+    .ing-table td.ing-pct{text-align:right;color:#8f8676;font-size:12px;width:52px;font-variant-numeric:tabular-nums}
+    .action-row{gap:8px}
+    .action-row .edit-btn{background:linear-gradient(135deg,#ffbe3d,var(--accent2));color:#1a0f04;border:none;font-weight:600;box-shadow:0 6px 22px rgba(232,130,32,0.35)}
+    .action-row .del-btn{padding:14px 16px}
+    @media(min-width:768px){
+      .m-stats{display:none}
+      .mobile-search-wrap{display:none}
+      .card-media{height:170px}
+      .desktop-modal-inner .detail-wrap{padding:24px 28px 28px}
+      .detail-hero{height:340px;margin:0}
+      .entry-card:hover .card-media .card-img{transform:scale(1.05)}
+    }
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -390,6 +448,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"4.0",d:"2026-11-22",c:"Neuer Aufbau: Kennzahlen und einklappbare Filter am Handy, Karten mit Platzhalter-Bild je Typ, Detail mit großem Foto und Mischungsverhältnis als Balken."},
   {v:"3.1",d:"2026-11-22",c:"Neues Design \"Glut\": warmes Hintergrundleuchten, Glas-Karten, Knöpfe mit Glut-Verlauf, größere Fotos. Nur Optik, alle Funktionen gleich."},
   {v:"3.0.1",d:"2026-07-28",c:"Fix: Login-Email jetzt case-insensitive (BBQ-Lab@... und bbq-lab@... funktionieren beide) + GitHub Action (Keep-Alive) verhindert Supabase-Auto-Pausen"},
   {v:"3.0",d:"2026-05-27",c:"Multi-User: Login/Registrierung via Email+Passwort. Jeder User hat seine eigenen Rezepte. Admin-Bereich (Supabase Dashboard-Link). Foto-Uploads in User-Ordner."},
@@ -620,8 +679,35 @@ function inp(cls,val,cb,extra){
 function txt(cls,text){const e=document.createElement("p");e.className=cls;e.textContent=text;return e;}
 function span(text){return document.createTextNode(text);}
 
-let S={view:"list",entries:[],current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null,session:null,authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,authLoading:false};
+let S={filtersOpen:false,view:"list",entries:[],current:null,detailId:null,menuOpen:false,importOpen:false,importText:"",focusedIng:0,sidebarOpen:true,sidebarMenuOpen:false,filter:null,search:"",pendingPhoto:null,selectionMode:false,selectedIds:[],typeFilter:null,meatFilter:[],ratingFilter:null,session:null,authMode:"login",authEmail:"",authPass:"",authError:null,authInfo:null,authLoading:false};
 let _lpTimer=null;
+// --- Design 4.0: Platzhalter, Versions-Chip, Mischungsverhaeltnis ---
+const PH={"Rub":["#e8a020","#7a2e0c"],"Sauce":["#d2452a","#4a120a"],"Marinade":["#c98a2a","#3d2a0c"],"Dip":["#8fae3a","#22300c"]};
+function placeholder(e,cls){
+  const ph=div(cls);const c=PH[e.type]||["#e8a020","#3a1a08"];
+  ph.style.setProperty("--ph1",c[0]);ph.style.setProperty("--ph2",c[1]);
+  const t=div("ph-type");t.textContent=e.type||"Mischung";ph.appendChild(t);
+  const n=div("ph-ini");n.textContent=(e.name||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();ph.appendChild(n);
+  return ph;
+}
+function nameWithVer(el,e){el.textContent=e.name;if(e.version){const v=document.createElement("span");v.className="ver-chip";v.textContent="V."+e.version;el.appendChild(v);}}
+const _FR={"¼":0.25,"½":0.5,"¾":0.75,"⅓":1/3,"⅔":2/3,"⅛":0.125};
+function parseQty(q){
+  if(!q)return NaN;q=String(q).trim().replace(",",".");
+  let m=q.match(/^(\d+(?:\.\d+)?)?\s*([¼½¾⅓⅔⅛])?$/);
+  if(m&&(m[1]||m[2]))return (m[1]?parseFloat(m[1]):0)+(m[2]?_FR[m[2]]:0);
+  m=q.match(/^(\d+)\/(\d+)$/);if(m)return m[1]/m[2];
+  return NaN;
+}
+// Grobe Umrechnung auf Teeloeffel, nur fuer den Anteil-Balken (Gramm wie ml gerechnet)
+const _UNIT_TL={"TL":1,"EL":3,"Cup":48,"Prise":0.0625,"ml":0.2,"g":0.2,"L":200};
+function mixShares(ings){
+  const rows=ings.map(i=>{const q=parseQty(i.qty),f=_UNIT_TL[i.unit];return(isNaN(q)||!f)?null:q*f;});
+  const ok=rows.filter(x=>x!==null&&x>0);
+  if(ok.length<2)return null;
+  const tot=ok.reduce((a,b)=>a+b,0);
+  return rows.map(x=>x===null?null:x/tot);
+}
 function set(p){S=Object.assign({},S,p);render();}
 
 function renderList(){
@@ -789,14 +875,29 @@ function renderList(){
     }
     mwrap.appendChild(dd);
   }
-  right.appendChild(badge);right.appendChild(mwrap);
+  right.appendChild(mwrap);
   top.appendChild(logo);top.appendChild(right);
   hdr.appendChild(top);main.appendChild(hdr);
 
-  // Mobile search bar (hidden on desktop via CSS)
-  const msw=div("mobile-search-wrap");msw.appendChild(buildSearch());main.appendChild(msw);
+  // Mobile Kennzahlen (Desktop hat die Sidebar)
+  const ms=div("m-stats");
+  const _avg=S.entries.length?(S.entries.reduce((a,e)=>a+(e.rating||0),0)/S.entries.length).toFixed(1):"–";
+  [["Rezepte",S.entries.length,null],["Fertig",S.entries.filter(e=>e.status==="fertig").length,"fertig"],["In Arbeit",S.entries.filter(e=>e.status==="in Arbeit").length,"in Arbeit"],["Schnitt",_avg+"★",undefined]].forEach(([l,v,k])=>{
+    const t=div("m-stat"+(k!==undefined?" clickable":"")+((k===null&&!S.filter)||(k&&S.filter===k)?" active":""));
+    const vv=div("m-stat-val");vv.textContent=v;const ll=div("m-stat-lbl");ll.textContent=l;
+    t.appendChild(vv);t.appendChild(ll);
+    if(k===null)t.addEventListener("click",()=>set({filter:null,typeFilter:null,meatFilter:[],ratingFilter:null,search:""}));
+    else if(k)t.addEventListener("click",()=>set({filter:S.filter===k?null:k}));
+    ms.appendChild(t);
+  });
+  main.appendChild(ms);
+  // Mobile search bar (hidden on desktop via CSS) + Filter-Knopf
+  const msw=div("mobile-search-wrap");msw.appendChild(buildSearch());
+  const _nf=(S.typeFilter?1:0)+S.meatFilter.length+(S.ratingFilter?1:0);
+  const fb=btn("filter-toggle"+(S.filtersOpen?" open":"")+(_nf?" has":""),_nf?"Filter · "+_nf:"Filter",()=>set({filtersOpen:!S.filtersOpen}));
+  msw.appendChild(fb);main.appendChild(msw);
   // Mobile filter bar — drei Zeilen (Bewertung / Typ / Anwendung), Label oberhalb
-  const mfw=div("mobile-filter-wrap");
+  const mfw=div("mobile-filter-wrap"+(S.filtersOpen?" open":""));
   // Bewertung
   const rRow=div("mobile-filter-row");
   const rLbl=div("mobile-filter-lbl");rLbl.textContent="Bewertung";rRow.appendChild(rLbl);
@@ -871,20 +972,24 @@ function renderList(){
     },{passive:true});
     card.addEventListener("touchmove",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
     card.addEventListener("touchend",()=>{if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;}},{passive:true});
-    if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;card.appendChild(ci);}
+    const media=div("card-media");
+    if(e.photoUrl){const ci=document.createElement("img");ci.className="card-img";ci.src=e.photoUrl;ci.alt=e.name;ci.loading="lazy";media.appendChild(ci);}
+    else media.appendChild(placeholder(e,"card-ph"));
+    card.appendChild(media);
     const ck=div("card-check"+(S.selectedIds.includes(e.id)?" checked":""));
     ck.textContent=S.selectedIds.includes(e.id)?"✓":"";
     ck.addEventListener("click",ev=>{ev.stopPropagation();const ids=S.selectedIds.includes(e.id)?S.selectedIds.filter(x=>x!==e.id):[...S.selectedIds,e.id];set({selectionMode:true,selectedIds:ids});});
     card.appendChild(ck);
     const ctop=div("card-top");
     const nd=div("");
-    const cn=div("card-name");cn.textContent=e.name+(e.version?" V."+e.version:"");
+    const cn=div("card-name");nameWithVer(cn,e);
     const cd=div("card-date");cd.textContent=e.date;
     nd.appendChild(cn);nd.appendChild(cd);
     const pill=div("status-pill");
     pill.textContent=SI[e.status]+" "+e.status;
-    pill.style.cssText="background:"+SC[e.status]+"22;color:"+SC[e.status]+";border:1px solid "+SC[e.status]+"44";
-    ctop.appendChild(nd);ctop.appendChild(pill);card.appendChild(ctop);
+    pill.style.cssText="color:"+SC[e.status]+";border-color:"+SC[e.status]+"66";
+    pill.classList.add("on-media");media.appendChild(pill);
+    ctop.appendChild(nd);card.appendChild(ctop);
     if(e.type||(e.meats&&e.meats.length>0)){
       const ct=div("card-tags");
       if(e.type){const tp=div("card-type-pill");tp.textContent=e.type;ct.appendChild(tp);}
@@ -1090,11 +1195,14 @@ function renderDetail(){
   const entry=S.entries.find(e=>e.id===S.detailId);
   if(!entry)return div("");
   const wrap=div("detail-wrap");
-  if(entry.photoUrl){const pi=document.createElement("img");pi.className="detail-photo";pi.src=entry.photoUrl;pi.alt=entry.name;wrap.appendChild(pi);}
+  const hero=div("detail-hero");
+  if(entry.photoUrl){const pi=document.createElement("img");pi.className="detail-photo";pi.src=entry.photoUrl;pi.alt=entry.name;hero.appendChild(pi);}
+  else hero.appendChild(placeholder(entry,"detail-ph"));
+  hero.appendChild(btn("back-btn hero-back","\u2190",()=>set({view:"list"})));
+  wrap.appendChild(hero);
   const dh=div("detail-header");
-  dh.appendChild(btn("back-btn","\u2190",()=>set({view:"list"})));
   const di=div("detail-info");
-  const dn=div("detail-name");dn.textContent=entry.name+(entry.version?" V."+entry.version:"");
+  const dn=div("detail-name");nameWithVer(dn,entry);
   const dm=div("detail-meta");dm.textContent=entry.date;
   const ds=div("detail-stars");
   [1,2,3,4,5].forEach(n=>{
@@ -1132,12 +1240,24 @@ function renderDetail(){
   const nb=div("note-box");
   const tbl=document.createElement("table");tbl.className="ing-table";
   const tb=document.createElement("tbody");
-  (entry.ingredients||[]).filter(i=>i.name).forEach(ing=>{
+  const _ings=(entry.ingredients||[]).filter(i=>i.name);
+  const _sh=mixShares(_ings);
+  const _pal=["#ffc14a","#e4572e","#f2e1bb","#b5651d","#f08a24","#8c2f1a","#d9b44a","#6b3e26","#ff9e6b","#a0522d"];
+  if(_sh){
+    const mix=div("mix-bar");
+    _ings.forEach((ing,i)=>{if(!_sh[i])return;const seg=div("mix-seg");seg.style.flex=String(_sh[i]);seg.style.background=_pal[i%_pal.length];seg.title=ing.name+" "+Math.round(_sh[i]*100)+" %";mix.appendChild(seg);});
+    const mt=div("mix-title");mt.textContent="Mischungsverhältnis (ca.)";
+    is.appendChild(mt);is.appendChild(mix);
+  }
+  _ings.forEach((ing,i)=>{
     const tr=document.createElement("tr");
     const td1=document.createElement("td");td1.textContent=ing.qty||"";
     const td2=document.createElement("td");td2.textContent=ing.unit||"";
     const td3=document.createElement("td");td3.textContent=ing.name;
-    tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);tb.appendChild(tr);
+    if(_sh){td3.style.setProperty("--dot",_pal[i%_pal.length]);td3.className="has-dot";}
+    const td4=document.createElement("td");td4.className="ing-pct";
+    if(_sh&&_sh[i]){td4.textContent=Math.round(_sh[i]*100)+" %";}
+    tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);tr.appendChild(td4);tb.appendChild(tr);
   });
   tbl.appendChild(tb);nb.appendChild(tbl);is.appendChild(nb);wrap.appendChild(is);
 
@@ -1149,9 +1269,9 @@ function renderDetail(){
   }
 
   const ar=div("action-row");
-  ar.appendChild(btn("edit-btn","✏️ Bearbeiten",()=>openEdit(entry)));
-  ar.appendChild(btn("dup-btn","📋 Als V."+nextVersion(entry.version),()=>openDuplicate(entry)));
-  ar.appendChild(btn("del-btn","🗑️",async()=>{
+  ar.appendChild(btn("edit-btn","Bearbeiten",()=>openEdit(entry)));
+  ar.appendChild(btn("dup-btn","＋ Als V."+nextVersion(entry.version),()=>openDuplicate(entry)));
+  ar.appendChild(btn("del-btn","Löschen",async()=>{
     if(!confirm("Eintrag wirklich löschen?")) return;
     const id = entry.id;
     const backup = S.entries;
