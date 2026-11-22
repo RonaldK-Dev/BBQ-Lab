@@ -247,8 +247,8 @@
       @keyframes fadeIn{from{opacity:0}to{opacity:1}}
       @keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
       @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-      .desktop-modal-overlay{animation:fadeIn 0.2s ease-out}
-      .desktop-modal-inner{animation:scaleIn 0.25s ease-out}
+      #root.enter .desktop-modal-overlay{animation:fadeIn 0.2s ease-out}
+      #root.enter .desktop-modal-inner{animation:scaleIn 0.25s ease-out}
       .sidebar-dropdown{animation:slideDown 0.18s ease-out}
     }
     /* ===== Design "Glut" v3.1 (22.11.2026) — nur Optik, ueberschreibt die Regeln oben.
@@ -794,6 +794,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"5.3.1",d:"2026-11-22",c:"Fix: Beim Umschalten der Portionen (½× bis 3×) blinkt das Rezeptfenster nicht mehr und springt nicht mehr nach oben."},
   {v:"5.3",d:"2026-11-22",c:"CL: Titelgeschichte oben in der Liste (bestes Rezept mit Foto, groß), Formular mit nummerierten Kapiteln, ruhigere Seitenleiste."},
   {v:"5.2",d:"2026-11-22",c:"Mischen-Modus: im Rezept auf „Jetzt mischen“, Zutaten groß der Reihe nach abhaken (auch umgerechnet), der Bildschirm bleibt dabei an."},
   {v:"5.1",d:"2026-11-22",c:"CL wird Standard und sieht aus wie ein Rezept-Magazin: echte Schriften (Fraunces, Inter, JetBrains Mono), nummerierte Rezepte, Zutaten wie auf einer Speisekarte, Notizen mit Initiale."},
@@ -1813,7 +1814,6 @@ function renderDetail(){
     const L=div("detail-col left"),R=div("detail-col right");
     [...wrap.children].forEach(ch=>{(ch.classList.contains("detail-hero")||ch.classList.contains("detail-header")||ch.classList.contains("ver-section")?L:R).appendChild(ch);});
     wrap.appendChild(L);wrap.appendChild(R);wrap.classList.add("two-col");
-    const inner=document.querySelector(".desktop-modal-inner");
   }
   return wrap;
 }
@@ -1886,6 +1886,8 @@ function render(){
   const _scr=S.view+":"+(S.view==="detail"?S.detailId:"");
   r.classList.toggle("enter",_scr!==_lastScreen);
   if(_scr!==_lastScreen){r.classList.remove("enter");void r.offsetWidth;r.classList.add("enter");}
+  const _same=!r.classList.contains("enter")||_scr===_lastScreen;
+  const _keep=_same?{w:window.scrollY,m:(document.querySelector(".desktop-modal-inner")||{}).scrollTop||0,x:(document.querySelector(".mix-screen")||{}).scrollTop||0}:null;
   _lastScreen=_scr;
   const focused=document.activeElement;
   const searchFocused=focused&&focused.classList&&focused.classList.contains("search-input");
@@ -1922,6 +1924,7 @@ function render(){
     r.appendChild(renderMix());
   }
   wakeLock(S.view==="mix");
+  if(_keep){const mi=document.querySelector(".desktop-modal-inner");if(mi)mi.scrollTop=_keep.m;const ms=document.querySelector(".mix-screen");if(ms)ms.scrollTop=_keep.x;if(window.scrollY!==_keep.w)window.scrollTo(0,_keep.w);}
   if(searchFocused){
     const inputs=document.querySelectorAll(".search-input");
     for(const inp of inputs){
