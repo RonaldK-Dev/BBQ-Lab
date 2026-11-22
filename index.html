@@ -242,6 +242,77 @@
       .desktop-modal-inner{animation:scaleIn 0.25s ease-out}
       .sidebar-dropdown{animation:slideDown 0.18s ease-out}
     }
+    /* ===== Design "Glut" v3.1 (22.11.2026) — nur Optik, ueberschreibt die Regeln oben.
+       Zum Zuruecknehmen diesen Block bis "Ende Glut" loeschen. ===== */
+    :root{--bg:#0b0a08;--surface:rgba(30,26,21,0.62);--surface-solid:#17140f;--border:rgba(255,190,110,0.10);--border-hi:rgba(255,190,110,0.22);--smoke:rgba(255,235,205,0.05);--muted:#8f8676;--glow:rgba(232,160,32,0.35);--ember:#ff7a1a}
+    html{background:var(--bg)}
+    body{background:transparent;min-height:100dvh}
+    body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+      radial-gradient(900px 520px at 85% -10%,rgba(232,120,32,0.20),transparent 60%),
+      radial-gradient(700px 480px at -10% 110%,rgba(196,92,26,0.16),transparent 60%),
+      radial-gradient(500px 300px at 50% 120%,rgba(255,170,60,0.07),transparent 70%)}
+    .logo span{-webkit-text-fill-color:#9a8f7c;color:#9a8f7c}
+    ::selection{background:rgba(232,160,32,0.35)}
+    .logo,.sidebar-logo,.auth-logo{background:linear-gradient(180deg,#ffd27a 0%,var(--accent) 45%,var(--accent2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(232,140,32,0.35))}
+    .header{background:linear-gradient(180deg,rgba(11,10,8,0.92),rgba(11,10,8,0.72));-webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--border)}
+    .badge,.menu-btn{background:rgba(255,235,205,0.06);border-color:var(--border-hi);color:#c9bfae}
+    .dropdown,.sidebar-dropdown{background:rgba(24,21,17,0.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-color:var(--border-hi);box-shadow:0 18px 48px rgba(0,0,0,0.55)}
+    /* Karten: Glas mit warmem Lichtrand */
+    .entry-card{background:linear-gradient(180deg,rgba(255,220,170,0.055),rgba(255,220,170,0.015)),var(--surface);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,230,190,0.07),0 10px 30px rgba(0,0,0,0.35)}
+    .entry-card::before{width:3px;top:14px;bottom:14px;border-radius:0 3px 3px 0;box-shadow:0 0 12px var(--st-color,var(--accent))}
+    .card-img{height:150px;border-radius:17px 17px 0 0;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent);margin-bottom:2px}
+    .card-name{font-size:17px;letter-spacing:0.1px}
+    .card-date,.ing-count{color:#7d7566}
+    .stars{color:var(--accent);text-shadow:0 0 10px rgba(232,160,32,0.35)}
+    .status-pill{backdrop-filter:blur(6px);box-shadow:0 0 0 1px rgba(255,255,255,0.03) inset}
+    .card-type-pill{background:linear-gradient(135deg,rgba(232,160,32,0.22),rgba(196,92,26,0.18));border-color:rgba(232,160,32,0.45);color:#ffc35a}
+    .card-meat-pill{background:rgba(255,235,205,0.05);border-color:var(--border)}
+    .entry-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 28px var(--glow)}
+    /* Knoepfe mit Glut */
+    .fab,.save-btn,.auth-submit,.sheet-ok,.sel-export,.sidebar-new-btn{background:linear-gradient(135deg,#ffbe3d 0%,var(--accent) 38%,var(--accent2) 100%);color:#1a0f04;font-weight:400;box-shadow:0 6px 22px rgba(232,130,32,0.38),inset 0 1px 0 rgba(255,240,200,0.55);transition:transform 0.15s,box-shadow 0.2s,filter 0.2s}
+    .fab{color:#1a0f04;box-shadow:0 8px 30px rgba(232,130,32,0.55),0 0 0 6px rgba(232,160,32,0.10),inset 0 1px 0 rgba(255,240,200,0.6)}
+    .fab:active,.save-btn:active,.auth-submit:active,.sidebar-new-btn:active{transform:scale(0.97)}
+    .back-btn,.edit-btn,.sheet-cancel,.sel-cancel{background:rgba(255,235,205,0.06);border-color:var(--border-hi)}
+    .dup-btn{background:rgba(232,160,32,0.12);border-color:rgba(232,160,32,0.4)}
+    /* Filter-Pillen */
+    .tag-pill{background:rgba(255,235,205,0.045);border-color:var(--border);color:#a59b89;padding:5px 12px}
+    .tag-pill:hover{border-color:var(--border-hi);color:var(--text)}
+    .tag-pill.active{background:rgba(232,160,32,0.16);color:#ffc35a;border-color:rgba(232,160,32,0.55);box-shadow:0 0 14px rgba(232,160,32,0.18)}
+    .tag-pill.type-active{background:linear-gradient(135deg,#ffbe3d,var(--accent2));color:#1a0f04;border-color:transparent;box-shadow:0 0 16px rgba(232,130,32,0.35)}
+    .lbl,.sec-lbl,.tag-group-lbl,.mobile-filter-lbl,.ing-title,.auth-field label{color:#9a8f7c;letter-spacing:1.4px}
+    /* Eingaben */
+    input,textarea,select,.search-input{background:rgba(0,0,0,0.28);border:1px solid var(--border-hi);border-radius:12px;transition:border-color 0.15s,box-shadow 0.15s}
+    input:focus,textarea:focus,select:focus,.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,160,32,0.16)}
+    .ing-block,.note-box,.ver-badge{background:linear-gradient(180deg,rgba(255,220,170,0.05),rgba(255,220,170,0.015));border-color:var(--border);border-radius:14px}
+    .frac-btn{background:rgba(0,0,0,0.3);border-color:var(--border-hi)}
+    .frac-btn:active{background:rgba(232,160,32,0.2)}
+    /* Detail */
+    .detail-photo{border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,0.5);max-height:300px}
+    .detail-name{font-size:30px;background:linear-gradient(180deg,#fff6e6,#e9dcc6);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .detail-stars{color:var(--accent);text-shadow:0 0 12px rgba(232,160,32,0.4)}
+    .ing-table td{border-bottom-color:rgba(255,190,110,0.08)}
+    /* Login */
+    .auth-wrap{background:transparent}
+    .auth-card{background:linear-gradient(180deg,rgba(255,220,170,0.06),rgba(255,220,170,0.015)),rgba(24,21,17,0.6);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--border-hi);border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,230,190,0.08),0 30px 80px rgba(0,0,0,0.55),0 0 80px rgba(232,120,32,0.08)}
+    .auth-logo{font-size:44px}
+    .sheet{background:rgba(24,21,17,0.94);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid var(--border-hi)}
+    .toast{background:rgba(24,21,17,0.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+    .selection-bar{background:rgba(18,16,13,0.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+    @media(min-width:768px){
+      .sidebar{background:linear-gradient(180deg,rgba(255,200,140,0.045),rgba(0,0,0,0)),rgba(14,12,10,0.72);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-right:1px solid var(--border)}
+      .sidebar-stats{background:linear-gradient(180deg,rgba(255,220,170,0.06),rgba(255,220,170,0.015));border-color:var(--border);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,230,190,0.06)}
+      .stat-row.active{background:linear-gradient(90deg,rgba(232,160,32,0.22),rgba(232,160,32,0.06));box-shadow:inset 2px 0 0 var(--accent)}
+      .sidebar-ghost-btn,.sidebar-menu-btn,.sidebar-collapse-btn{background:rgba(255,235,205,0.04);border-color:var(--border)}
+      .sidebar-new-btn:hover{opacity:1;filter:brightness(1.08);box-shadow:0 8px 30px rgba(232,130,32,0.5),inset 0 1px 0 rgba(255,240,200,0.6)}
+      .desktop-list-header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(11,10,8,0.5),transparent)}
+      .desktop-list-title{font-size:22px;letter-spacing:2px;color:#d8cdb8}
+      .list{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;padding:28px 32px 36px}
+      .entry-card:hover{border-color:rgba(232,160,32,0.5);transform:translateY(-4px);box-shadow:inset 0 1px 0 rgba(255,230,190,0.1),0 16px 40px rgba(0,0,0,0.45),0 0 32px rgba(232,130,32,0.16)}
+      .desktop-modal-overlay{background:rgba(5,4,3,0.6);backdrop-filter:blur(10px)}
+      .desktop-modal-inner{background:linear-gradient(180deg,rgba(255,220,170,0.05),rgba(255,220,170,0.01)),rgba(22,19,15,0.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:1px solid var(--border-hi);border-radius:24px;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 60px rgba(232,120,32,0.08)}
+    }
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+    /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
        jeweils neueste 2.x: ein fehlerhaftes oder kompromittiertes Release waere
@@ -268,6 +339,7 @@ const SI={"in Arbeit":"\ud83d\udd2c","fertig":"\u2705","verworfen":"\u274c"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"3.1",d:"2026-11-22",c:"Neues Design \"Glut\": warmes Hintergrundleuchten, Glas-Karten, Knöpfe mit Glut-Verlauf, größere Fotos. Nur Optik, alle Funktionen gleich."},
   {v:"3.0.1",d:"2026-07-28",c:"Fix: Login-Email jetzt case-insensitive (BBQ-Lab@... und bbq-lab@... funktionieren beide) + GitHub Action (Keep-Alive) verhindert Supabase-Auto-Pausen"},
   {v:"3.0",d:"2026-05-27",c:"Multi-User: Login/Registrierung via Email+Passwort. Jeder User hat seine eigenen Rezepte. Admin-Bereich (Supabase Dashboard-Link). Foto-Uploads in User-Ordner."},
   {v:"2.6",d:"2026-05-27",c:"Sterne im Detail-View direkt klickbar (ohne Edit-Modus) + besseres Foto-Upload Error-Logging zur Bug-Diagnose"},

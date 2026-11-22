@@ -9,7 +9,7 @@
 // Damit sind alle Shell-Dateien gleicher Herkunft und die App startet offline
 // vollstaendig - vorher haingen Schriften und das Supabase-SDK am Netz.
 
-const CACHE = "bbq-lab-v8";
+const CACHE = "bbq-lab-v9";
 const SHELL = [
   "./",
   "./index.html",
