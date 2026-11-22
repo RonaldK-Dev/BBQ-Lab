@@ -488,6 +488,36 @@
       .desktop-modal-inner .form-wrap{padding:28px 28px 0}
       .save-bar{background:linear-gradient(180deg,transparent,rgba(22,19,15,0.96) 35%)}
     }
+    /* --- 4.3: Bewegung --- */
+    @keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(0.985)}to{opacity:1;transform:none}}
+    @keyframes heroIn{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
+    @keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 8px 30px rgba(232,130,32,0.55),0 0 0 6px rgba(232,160,32,0.10),inset 0 1px 0 rgba(255,240,200,0.6)}50%{box-shadow:0 8px 36px rgba(232,130,32,0.7),0 0 0 10px rgba(232,160,32,0.06),inset 0 1px 0 rgba(255,240,200,0.6)}}
+    #root.enter .entry-card,#root.enter .m-stat,#root.enter .form-group,#root.enter .ing-block,#root.enter .section,#root.enter .detail-header,#root.enter .auth-card{animation:riseIn 0.45s cubic-bezier(.2,.8,.2,1) both}
+    #root.enter .m-stat:nth-child(2){animation-delay:.03s}#root.enter .m-stat:nth-child(3){animation-delay:.06s}#root.enter .m-stat:nth-child(4){animation-delay:.09s}
+    #root.enter .entry-card:nth-child(1){animation-delay:.06s}#root.enter .entry-card:nth-child(2){animation-delay:.12s}#root.enter .entry-card:nth-child(3){animation-delay:.18s}#root.enter .entry-card:nth-child(4){animation-delay:.24s}#root.enter .entry-card:nth-child(5){animation-delay:.3s}#root.enter .entry-card:nth-child(n+6){animation-delay:.34s}
+    #root.enter .form-group:nth-of-type(2){animation-delay:.05s}#root.enter .form-group:nth-of-type(3){animation-delay:.1s}#root.enter .ing-block{animation-delay:.15s}
+    #root.enter .detail-hero{animation:heroIn 0.6s cubic-bezier(.2,.8,.2,1) both}
+    #root.enter .detail-header{animation-delay:.08s}
+    #root.enter .section:nth-of-type(1){animation-delay:.12s}#root.enter .section:nth-of-type(2){animation-delay:.18s}#root.enter .section:nth-of-type(3){animation-delay:.24s}
+    #root.enter .mix-seg{transform-origin:left;animation:growX 0.7s .25s cubic-bezier(.2,.8,.2,1) both}
+    .mix-bar{transform-origin:left}
+    .entry-card{transition:transform 0.18s ease,border-color 0.2s,box-shadow 0.2s}
+    .entry-card:active{transform:scale(0.98)}
+    button{-webkit-tap-highlight-color:transparent}
+    .tag-pill,.m-stat,.ver-node,.scale-btn,.seg-btn,.frac-btn,.filter-toggle,.edit-btn,.dup-btn,.del-btn,.back-btn,.menu-btn{transition:transform 0.12s ease,background 0.15s,color 0.15s,border-color 0.15s,box-shadow 0.2s}
+    .tag-pill:active,.m-stat:active,.ver-node:active,.scale-btn:active,.seg-btn:active,.frac-btn:active,.filter-toggle:active,.edit-btn:active,.dup-btn:active,.del-btn:active,.back-btn:active,.menu-btn:active{transform:scale(0.94)}
+    .fab{animation:glowPulse 3.2s ease-in-out infinite}
+    .fab:active{transform:scale(0.92) rotate(90deg)}
+    .fab{transition:transform 0.2s cubic-bezier(.2,.8,.2,1)}
+    .dropdown{animation:riseIn 0.18s ease-out both;transform-origin:top right}
+    .scale-btn,.ing-table td:first-child{transition:color 0.2s,text-shadow 0.3s}
+    .ing-table tr{transition:background 0.15s}
+    .ing-table tr:hover td{background:rgba(232,160,32,0.06)}
+    @media(min-width:768px){
+      #root.enter .desktop-modal-inner .detail-hero{animation:none}
+      .entry-card:active{transform:translateY(-2px) scale(0.99)}
+    }
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -515,6 +545,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"4.3",d:"2026-11-22",c:"Bewegung: Karten und Abschnitte blenden beim Öffnen sanft ein, Mischungsbalken wächst, Rückmeldung beim Antippen, Plus-Knopf glüht."},
   {v:"4.2",d:"2026-11-22",c:"Formular in Gruppen-Karten, Status als Schalter, Speichern-Knopf bleibt unten sichtbar. Schönere leere Liste, Menü ohne Emojis, fehlende Fotos zeigen den Platzhalter."},
   {v:"4.1",d:"2026-11-22",c:"Versionen einer Mischung als Zeitleiste im Detail, Unterschiede zur Vorversion (neu, entfernt, geändert), Mengen umrechnen ½× bis 3×."},
   {v:"4.0",d:"2026-11-22",c:"Neuer Aufbau: Kennzahlen und einklappbare Filter am Handy, Karten mit Platzhalter-Bild je Typ, Detail mit großem Foto und Mischungsverhältnis als Balken."},
@@ -1500,8 +1531,14 @@ function doImport(){
   }catch{alert("\u274c Ung\u00fcltiges Format.");}
 }
 
+let _lastScreen=null;
 function render(){
   const r=document.getElementById("root");
+  // Einblend-Animation nur beim Wechsel der Ansicht, nicht bei jedem Tastendruck
+  const _scr=S.view+":"+(S.view==="detail"?S.detailId:"");
+  r.classList.toggle("enter",_scr!==_lastScreen);
+  if(_scr!==_lastScreen){r.classList.remove("enter");void r.offsetWidth;r.classList.add("enter");}
+  _lastScreen=_scr;
   const focused=document.activeElement;
   const searchFocused=focused&&focused.classList&&focused.classList.contains("search-input");
   const searchPos=searchFocused?focused.selectionEnd:null;
