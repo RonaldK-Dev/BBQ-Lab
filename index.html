@@ -518,6 +518,27 @@
       #root.enter .desktop-modal-inner .detail-hero{animation:none}
       .entry-card:active{transform:translateY(-2px) scale(0.99)}
     }
+    /* --- 4.4: Desktop-Detail, Login, Seitenleiste --- */
+    .auth-feats{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:-12px 0 22px}
+    .auth-feats span{font-size:11px;padding:4px 10px;border-radius:20px;color:#d9c9ac;background:rgba(255,235,205,0.05);border:1px solid var(--border)}
+    .auth-wrap::before{content:'';position:fixed;width:520px;height:520px;left:50%;top:44%;transform:translate(-50%,-50%);background:url(icon.png) center/cover;border-radius:50%;opacity:0.07;filter:blur(30px) saturate(1.4);pointer-events:none;z-index:-1}
+    .auth-error,.auth-info{border-radius:12px}
+    .auth-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:#f3e7d1}
+    .sidebar-avatar{width:30px;height:30px;font-size:17px!important;margin:10px auto 0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1a0f04;background:linear-gradient(135deg,#ffbe3d,var(--accent2));box-shadow:0 4px 18px rgba(232,130,32,0.4)}
+    .sidebar-user{font-size:11px;color:#c9bfae;margin-top:8px}
+    .sidebar-user-admin{color:#ffc35a}
+    .sidebar-admin-link{border:1px solid var(--border);border-radius:10px;background:rgba(255,235,205,0.04);color:#c9bfae;padding:8px}
+    .sidebar-admin-link:hover{color:#ffc35a;border-color:rgba(232,160,32,0.45);background:rgba(232,160,32,0.08)}
+    .sidebar-logout-btn{border-radius:10px;padding:7px 14px}
+    @media(min-width:768px){
+      .desktop-modal-inner:has(.two-col){max-width:1040px}
+      .detail-wrap.two-col{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start}
+      .detail-col.left{position:sticky;top:0}
+      .two-col .detail-hero{height:360px}
+      .two-col .detail-name{font-size:42px}
+      .two-col .action-row{margin-top:18px}
+      .two-col .detail-col.right .section:first-child{margin-top:4px}
+    }
     /* ===== Ende Glut ===== */
   </style>
   <!-- supabase-js liegt lokal im Repo statt am CDN. Vorher zeigte @2 auf die
@@ -545,6 +566,7 @@ const SI={"in Arbeit":"\u25cf","fertig":"\u2713","verworfen":"\u2715"};
 
 // Versionsverlauf \u2014 neueste oben
 const VERSIONS=[
+  {v:"4.4",d:"2026-11-22",c:"Desktop: Detail breit und zweispaltig. Login mit Leistungszeile und Glut im Hintergrund, Seitenleiste mit Nutzerkarte."},
   {v:"4.3",d:"2026-11-22",c:"Bewegung: Karten und Abschnitte blenden beim Öffnen sanft ein, Mischungsbalken wächst, Rückmeldung beim Antippen, Plus-Knopf glüht."},
   {v:"4.2",d:"2026-11-22",c:"Formular in Gruppen-Karten, Status als Schalter, Speichern-Knopf bleibt unten sichtbar. Schönere leere Liste, Menü ohne Emojis, fehlende Fotos zeigen den Platzhalter."},
   {v:"4.1",d:"2026-11-22",c:"Versionen einer Mischung als Zeitleiste im Detail, Unterschiede zur Vorversion (neu, entfernt, geändert), Mengen umrechnen ½× bis 3×."},
@@ -703,10 +725,11 @@ function renderAuth(){
   const card=div("auth-card");
   const logo=div("auth-logo");logo.textContent="BBQ LAB";card.appendChild(logo);
   const sub=div("auth-sub");sub.textContent="Gewürz Tasting Log";card.appendChild(sub);
+  const feats=div("auth-feats");["Rubs & Saucen","Versionen","Mischungen"].forEach(t=>{const f=document.createElement("span");f.textContent=t;feats.appendChild(f);});card.appendChild(feats);
   const isReg=S.authMode==="register";
   const title=div("auth-title");title.textContent=isReg?"Account erstellen":"Einloggen";card.appendChild(title);
-  if(S.authError){const err=div("auth-error");err.textContent="❌ "+S.authError;card.appendChild(err);}
-  if(S.authInfo){const inf=div("auth-info");inf.textContent="✅ "+S.authInfo;card.appendChild(inf);}
+  if(S.authError){const err=div("auth-error");err.textContent=S.authError;card.appendChild(err);}
+  if(S.authInfo){const inf=div("auth-info");inf.textContent=S.authInfo;card.appendChild(inf);}
   // Email
   const ef=div("auth-field");
   const el=document.createElement("label");el.textContent="Email";
@@ -921,6 +944,7 @@ function renderList(){
     const footTitle=div("sidebar-footer-title");footTitle.textContent="BBQ Lab v"+VERSIONS[0].v;
     foot.appendChild(footTitle);
     if(S.session){
+      const av=div("sidebar-avatar");av.textContent=(S.session.user.email||"?")[0].toUpperCase();foot.appendChild(av);
       const ue=document.createElement("div");ue.className="sidebar-user"+(isAdmin()?" sidebar-user-admin":"");
       ue.textContent=S.session.user.email+(isAdmin()?" · Admin":"");
       foot.appendChild(ue);
@@ -1467,6 +1491,13 @@ function renderDetail(){
     }
   }));
   wrap.appendChild(ar);
+  if(window.innerWidth>=768){
+    // Desktop: links Bild, Kopf, Versionen - rechts Zutaten, Notizen, Aktionen
+    const L=div("detail-col left"),R=div("detail-col right");
+    [...wrap.children].forEach(ch=>{(ch.classList.contains("detail-hero")||ch.classList.contains("detail-header")||ch.classList.contains("ver-section")?L:R).appendChild(ch);});
+    wrap.appendChild(L);wrap.appendChild(R);wrap.classList.add("two-col");
+    const inner=document.querySelector(".desktop-modal-inner");
+  }
   return wrap;
 }
 
