@@ -9,7 +9,7 @@
 // Damit sind alle Shell-Dateien gleicher Herkunft und die App startet offline
 // vollstaendig - vorher haingen Schriften und das Supabase-SDK am Netz.
 
-const CACHE = "bbq-lab-v9";
+const CACHE = "bbq-lab-v10";
 const SHELL = [
   "./",
   "./index.html",
@@ -21,7 +21,15 @@ const SHELL = [
   "./fonts/bebas-neue-latin.woff2",
   "./fonts/bebas-neue-latin-ext.woff2",
   "./fonts/dm-sans-latin.woff2",
-  "./fonts/dm-sans-latin-ext.woff2"
+  "./fonts/dm-sans-latin-ext.woff2",
+  "./fonts/fraunces-normal-400.woff2",
+  "./fonts/fraunces-normal-500.woff2",
+  "./fonts/fraunces-italic-300.woff2",
+  "./fonts/fraunces-italic-400.woff2",
+  "./fonts/inter-normal-400.woff2",
+  "./fonts/inter-normal-500.woff2",
+  "./fonts/inter-normal-600.woff2",
+  "./fonts/jetbrains-mono-normal-500.woff2"
 ];
 
 self.addEventListener("install", e => {
